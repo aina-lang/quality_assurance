@@ -2,6 +2,10 @@
   "name": "quality-assurance",
   "version": "2.0.2",
   "private": true,
+  "engines": {
+    "node": "22.x",
+    "npm": "11.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "tsc --noCheck && next build",
