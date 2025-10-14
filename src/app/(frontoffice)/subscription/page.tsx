@@ -72,7 +72,7 @@ const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
 };
 
 export default function Inscription() {
-    const [currentStep, setCurrentStep] = useState<string>("info"); // Step: info -> plan
+    const [currentStep, setCurrentStep] = useState<string>("plan"); // Step: info -> plan
     const [formData, setFormData] = useState({
         nom: "",
         email: "",
@@ -356,7 +356,7 @@ export default function Inscription() {
                                         </CardHeader>
                                         <CardContent>
                                             <Elements stripe={stripePromise} options={{ clientSecret }}>
-                                                <PaymentForm onPaymentSuccess={handlePaymentSuccess} />
+                                                <PaymentForm onPaymentSuccess={handlePaymentSuccess} clientSecret={clientSecret}/>
                                             </Elements>
                                         </CardContent>
                                     </Card>
