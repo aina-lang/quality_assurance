@@ -8,6 +8,7 @@ import { Download, Monitor, Smartphone, Tablet, Cpu, MemoryStick, HardDrive, Che
 import Link from "next/link";
 import { getAppVersions } from "@/app/actions/backoffice";
 import Swal from "sweetalert2";
+import { formatSize } from "@/app/lib/types";
 
 
 
@@ -21,6 +22,8 @@ export default function Telechargement() {
     async function loadVersions() {
       try {
         const res = await getAppVersions();
+        console.log(res);
+
         setVersions(res);
       } catch (err) {
         console.error(err);
@@ -83,16 +86,16 @@ export default function Telechargement() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">Taille :</span>
-                      <span className="text-sm">{v.size}</span>
+                      <span className="text-sm">{formatSize(v.size)}</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <h4 className="font-medium text-sm">Configuration requise :</h4>
                     <div className="space-y-1 text-xs text-muted-foreground">
-                      <div className="flex items-center space-x-2"><Cpu className="h-3 w-3" /> <span>{v.processor}</span></div>
-                      <div className="flex items-center space-x-2"><MemoryStick className="h-3 w-3" /> <span>{v.memory}</span></div>
-                      <div className="flex items-center space-x-2"><HardDrive className="h-3 w-3" /> <span>{v.storage}</span></div>
+                      <div className="flex items-center space-x-2"><Cpu className="h-3 w-3" /> <span>{v.cpu_requirement}</span></div>
+                      <div className="flex items-center space-x-2"><MemoryStick className="h-3 w-3" /> <span>{v.ram_requirement}</span></div>
+                      <div className="flex items-center space-x-2"><HardDrive className="h-3 w-3" /> <span>{v.storage_requirement}</span></div>
                     </div>
                   </div>
 
