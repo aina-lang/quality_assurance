@@ -12,7 +12,7 @@ import {
   PieChartIcon,
   PlugInIcon,
 } from "../icons/index";
-import { Users } from "lucide-react";
+import { Folder, Users } from "lucide-react";
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -45,11 +45,11 @@ const navItems: NavItem[] = [
     //   { name: "Historique", path: "/abonnements/historique" },
     // ],
   },
-  // {
-  //   icon: <Folder />,
-  //   name: "Domaines",
-  //   path: "/domaines",
-  // },
+  {
+    icon: <Folder />,
+    name: "Les versions",
+    path: "/upload-app",
+  },
   // {
   //   icon: <PieChartIcon />, // Icône pour paiements
   //   name: "Paiements",
