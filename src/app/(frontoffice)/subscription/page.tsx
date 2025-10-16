@@ -15,9 +15,10 @@ import { createClient, getAccountTypes } from "@/app/actions/frontoffice";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from '@stripe/stripe-js';
-import {createPaymentIntent }from "@/app/actions/createPaymentIntent"
+import { createPaymentIntent } from "@/app/actions/createPaymentIntent";
+
 // Charger Stripe avec la clé publique
-const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY ?? "pk_test_51SCdoeFivno0gXseuoYu1NyiROIxnSsMt7XYpOFnFdSt1twAvlCkTHOfCZSDTqPI5XDpIDupOsTTKvX62anb3cLb00gl5ceTPP");
+const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY ?? "pk_test_XXXX");
 
 const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
     const stripe = useStripe();
@@ -53,11 +54,7 @@ const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
                 <CardElement
                     options={{
                         style: {
-                            base: {
-                                fontSize: '16px',
-                                color: '#32325d',
-                                '::placeholder': { color: '#aab7c4' },
-                            },
+                            base: { fontSize: '16px', color: '#32325d', '::placeholder': { color: '#aab7c4' } },
                             invalid: { color: '#fa755a' },
                         },
                     }}
@@ -66,13 +63,12 @@ const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
             <Button type="submit" disabled={isProcessing || !stripe || !elements}>
                 {isProcessing ? "Traitement..." : "Payer maintenant"}
             </Button>
-            <div id="payment-message" className="text-red-500 mt-2"></div>
         </form>
     );
 };
 
 export default function Inscription() {
-    const [currentStep, setCurrentStep] = useState<string>("plan"); // Step: info -> plan
+    const [currentStep, setCurrentStep] = useState<string>("info");
     const [formData, setFormData] = useState({
         nom: "",
         email: "",
@@ -103,7 +99,7 @@ export default function Inscription() {
         async function fetchPlans() {
             const data = await getAccountTypes();
             setPlans(
-                data.map((p:any) => ({
+                data.map((p: any) => ({
                     value: p.id.toString(),
                     label: p.name,
                     price: p.price,
@@ -114,17 +110,14 @@ export default function Inscription() {
         fetchPlans();
     }, []);
 
-    const selectedPlan = plans.find((plan) => plan.value === formData.typeCompte);
+    const selectedPlan = plans.find(plan => plan.value === formData.typeCompte);
     const isPaidPlan = selectedPlan && selectedPlan.price > 0;
 
-    // Générer clientSecret dès qu'un plan payant est sélectionné
     useEffect(() => {
         const fetchClientSecret = async () => {
             if (isPaidPlan) {
-                (async () => {
-                    const secret = await createPaymentIntent(19.99, "usd", "premium");
-                    setClientSecret(secret);
-                })();
+                const secret = await createPaymentIntent(19.99, "usd", "premium");
+                setClientSecret(secret);
             } else {
                 setClientSecret(null);
             }
@@ -253,6 +246,7 @@ export default function Inscription() {
                 </div>
 
                 <Tabs value={currentStep} onValueChange={setCurrentStep} className="space-y-6">
+                    {/* Step 1: Informations personnelles */}
                     <TabsContent value="info">
                         <Card>
                             <CardHeader>
@@ -276,6 +270,7 @@ export default function Inscription() {
                                             {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                                         </div>
                                     </div>
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
                                             <Label htmlFor="motDePasse">Mot de passe *</Label>
@@ -298,25 +293,38 @@ export default function Inscription() {
                                             {errors.confirmMotDePasse && <p className="text-xs text-red-500">{errors.confirmMotDePasse}</p>}
                                         </div>
                                     </div>
+
+                                    {/* Document légal */}
                                     <div className="space-y-1">
                                         <Label htmlFor="legal_info">Document légal *</Label>
-                                        <Label htmlFor="legal_info" className="cursor-pointer h-24 w-full border-2 border-dashed flex justify-center items-center rounded-md bg-gray-50">
-                                            <span>.pdf,.jpg,.jpeg,.png</span>
+                                        <Label
+                                            htmlFor="legal_info"
+                                            className="cursor-pointer h-24 w-full border-2 border-dashed flex flex-col justify-center items-center rounded-md bg-gray-50"
+                                        >
+                                            {formData.legal_info ? (
+                                                <>
+                                                    <span className="font-medium">{formData.legal_info.name}</span>
+                                                    <span className="text-sm text-gray-500 mt-1">Cliquez pour changer</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span>.pdf, .jpg, .jpeg, .png</span>
+                                                    <span className="text-sm text-gray-500 mt-1">Cliquez pour sélectionner</span>
+                                                </>
+                                            )}
                                         </Label>
                                         <Input type="file" hidden id="legal_info" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFormData({ ...formData, legal_info: e.target.files?.[0] ?? null })} />
                                         {errors.legal_info && <p className="text-xs text-red-500">{errors.legal_info}</p>}
                                     </div>
+
                                     <div className="flex items-start space-x-2">
-                                        <Checkbox
-                                            checked={formData.accepteConditions}
-                                            onCheckedChange={checked => setFormData({ ...formData, accepteConditions: !!checked })}
-                                            id="conditions"
-                                        />
+                                        <Checkbox checked={formData.accepteConditions} onCheckedChange={checked => setFormData({ ...formData, accepteConditions: !!checked })} id="conditions" />
                                         <Label htmlFor="conditions" className="text-sm leading-relaxed">
                                             J'accepte les <Link href="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link> et la <Link href="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link> *
                                         </Label>
                                     </div>
                                     {errors.accepteConditions && <p className="text-xs text-red-500">{errors.accepteConditions}</p>}
+
                                     <div className="flex justify-end">
                                         <Button type="submit">Suivant</Button>
                                     </div>
@@ -324,6 +332,8 @@ export default function Inscription() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+
+                    {/* Step 2: Choix du plan */}
                     <TabsContent value="plan">
                         <Card>
                             <CardHeader>
@@ -349,6 +359,7 @@ export default function Inscription() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+
                                 {isPaidPlan && clientSecret && (
                                     <Card>
                                         <CardHeader>
@@ -356,11 +367,12 @@ export default function Inscription() {
                                         </CardHeader>
                                         <CardContent>
                                             <Elements stripe={stripePromise} options={{ clientSecret }}>
-                                                <PaymentForm onPaymentSuccess={handlePaymentSuccess} clientSecret={clientSecret}/>
+                                                <PaymentForm onPaymentSuccess={handlePaymentSuccess} clientSecret={clientSecret} />
                                             </Elements>
                                         </CardContent>
                                     </Card>
                                 )}
+
                                 {selectedPlan && (
                                     <Card className="mt-4">
                                         <CardHeader>
@@ -379,6 +391,7 @@ export default function Inscription() {
                                         </CardContent>
                                     </Card>
                                 )}
+
                                 <div className="flex justify-between mt-4">
                                     <Button variant="outline" onClick={() => setCurrentStep("info")}>Retour</Button>
                                     <Button onClick={handleSubmit} disabled={isLoading}>
