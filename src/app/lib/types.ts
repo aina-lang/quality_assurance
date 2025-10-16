@@ -72,3 +72,16 @@ export interface TemplateFile {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface AppVersion {
+  id: number;
+  os: string;
+  version: string;
+  size: string;            // ex: '156 MB' ou '1.2 GB'
+  cpu_requirement: string; // ex: 'Intel Core i3 ou AMD équivalent'
+  ram_requirement: string; // ex: '4 GB RAM minimum, 8 GB recommandé'
+  storage_requirement: string; // ex: '500 MB d'espace libre'
+  download_link: string;
+  created_at?: Date;
+  updated_at?: Date;
+}

@@ -1,19 +1,12 @@
-"use server";
-
-// Imports nécessaires
+"use server";;
 import { getServerSession } from "next-auth";
 import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 import {
-  Admin,
+  AppVersion,
   Client,
-  Domaine,
-  Fichier,
-  Paiement,
   Participant,
   Template,
-  ClientParticipant,
-  DomaineParticipant,
 } from "@/app/lib/types";
 
 import bcrypt from "bcryptjs";
@@ -27,7 +20,7 @@ async function checkAdminSession(): Promise<void> {
 
 // CRUD pour ADMINS
 export async function getAdmins(): Promise<Admin[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT id, email FROM admins");
     return rows as Admin[];
@@ -38,7 +31,7 @@ export async function getAdmins(): Promise<Admin[]> {
 }
 
 export async function createAdmin(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
@@ -52,7 +45,7 @@ export async function createAdmin(formData: FormData): Promise<{ id: number }> {
 }
 
 export async function getAdmin(id: number): Promise<Admin | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT id, email FROM admins WHERE id = ?", [id]);
     return rows[0] as Admin | null;
@@ -63,7 +56,7 @@ export async function getAdmin(id: number): Promise<Admin | null> {
 }
 
 export async function updateAdmin(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string | null;
@@ -83,7 +76,7 @@ export async function updateAdmin(id: number, formData: FormData): Promise<{ suc
 }
 
 export async function deleteAdmin(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM admins WHERE id = ?", [id]);
     return { success: true };
@@ -95,7 +88,7 @@ export async function deleteAdmin(id: number): Promise<{ success: boolean }> {
 
 // CRUD pour CLIENTS
 export async function getClients(): Promise<Client[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>(
       "SELECT id, company_name, email, account_type, legal_info FROM clients"
@@ -108,7 +101,7 @@ export async function getClients(): Promise<Client[]> {
 }
 
 export async function createClient(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const company_name = formData.get("company_name") as string;
     const email = formData.get("email") as string;
@@ -130,7 +123,7 @@ export async function createClient(formData: FormData): Promise<{ id: number }> 
 }
 
 export async function getClient(id: number): Promise<Client | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM clients WHERE id = ?", [id]);
     return rows[0] as Client | null;
@@ -141,7 +134,7 @@ export async function getClient(id: number): Promise<Client | null> {
 }
 
 export async function updateClient(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const company_name = formData.get("company_name") as string;
     const email = formData.get("email") as string;
@@ -166,7 +159,7 @@ export async function updateClient(id: number, formData: FormData): Promise<{ su
 }
 
 export async function deleteClient(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM clients WHERE id = ?", [id]);
     return { success: true };
@@ -178,7 +171,7 @@ export async function deleteClient(id: number): Promise<{ success: boolean }> {
 
 // CRUD pour DOMAINES
 export async function getDomaines(): Promise<Domaine[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaines");
     return rows as Domaine[];
@@ -189,7 +182,7 @@ export async function getDomaines(): Promise<Domaine[]> {
 }
 
 export async function createDomaine(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const client_id = formData.get("client_id") as string;
@@ -202,7 +195,7 @@ export async function createDomaine(formData: FormData): Promise<{ id: number }>
 }
 
 export async function getDomaine(id: number): Promise<Domaine | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaines WHERE id = ?", [id]);
     return rows[0] as Domaine | null;
@@ -213,7 +206,7 @@ export async function getDomaine(id: number): Promise<Domaine | null> {
 }
 
 export async function updateDomaine(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const client_id = formData.get("client_id") as string;
@@ -226,7 +219,7 @@ export async function updateDomaine(id: number, formData: FormData): Promise<{ s
 }
 
 export async function deleteDomaine(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM domaines WHERE id = ?", [id]);
     return { success: true };
@@ -238,7 +231,7 @@ export async function deleteDomaine(id: number): Promise<{ success: boolean }> {
 
 // CRUD pour FICHIERS
 export async function getFichiers(): Promise<Fichier[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM fichiers");
     return rows as Fichier[];
@@ -249,7 +242,7 @@ export async function getFichiers(): Promise<Fichier[]> {
 }
 
 export async function createFichier(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const chemin = formData.get("chemin") as string;
@@ -263,7 +256,7 @@ export async function createFichier(formData: FormData): Promise<{ id: number }>
 }
 
 export async function getFichier(id: number): Promise<Fichier | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM fichiers WHERE id = ?", [id]);
     return rows[0] as Fichier | null;
@@ -274,7 +267,7 @@ export async function getFichier(id: number): Promise<Fichier | null> {
 }
 
 export async function updateFichier(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const chemin = formData.get("chemin") as string;
@@ -288,7 +281,7 @@ export async function updateFichier(id: number, formData: FormData): Promise<{ s
 }
 
 export async function deleteFichier(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM fichiers WHERE id = ?", [id]);
     return { success: true };
@@ -300,7 +293,7 @@ export async function deleteFichier(id: number): Promise<{ success: boolean }> {
 
 // CRUD pour PAIEMENTS
 export async function getPaiements(): Promise<Paiement[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM paiements");
     return rows as Paiement[];
@@ -311,7 +304,7 @@ export async function getPaiements(): Promise<Paiement[]> {
 }
 
 export async function createPaiement(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const client_id = formData.get("client_id") as string;
     const montant = formData.get("montant") as string;
@@ -330,7 +323,7 @@ export async function createPaiement(formData: FormData): Promise<{ id: number }
 }
 
 export async function getPaiement(id: number): Promise<Paiement | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM paiements WHERE id = ?", [id]);
     return rows[0] as Paiement | null;
@@ -341,7 +334,7 @@ export async function getPaiement(id: number): Promise<Paiement | null> {
 }
 
 export async function updatePaiement(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const client_id = formData.get("client_id") as string;
     const montant = formData.get("montant") as string;
@@ -360,7 +353,7 @@ export async function updatePaiement(id: number, formData: FormData): Promise<{ 
 }
 
 export async function deletePaiement(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM paiements WHERE id = ?", [id]);
     return { success: true };
@@ -372,7 +365,7 @@ export async function deletePaiement(id: number): Promise<{ success: boolean }> 
 
 // CRUD pour PARTICIPANTS
 export async function getParticipants(): Promise<Participant[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM participants");
     return rows as Participant[];
@@ -383,7 +376,7 @@ export async function getParticipants(): Promise<Participant[]> {
 }
 
 export async function createParticipant(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const email = formData.get("email") as string;
     const nom = formData.get("nom") as string | null;
@@ -396,7 +389,7 @@ export async function createParticipant(formData: FormData): Promise<{ id: numbe
 }
 
 export async function getParticipant(id: number): Promise<Participant | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM participants WHERE id = ?", [id]);
     return rows[0] as Participant | null;
@@ -407,7 +400,7 @@ export async function getParticipant(id: number): Promise<Participant | null> {
 }
 
 export async function updateParticipant(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const email = formData.get("email") as string;
     const nom = formData.get("nom") as string | null;
@@ -420,7 +413,7 @@ export async function updateParticipant(id: number, formData: FormData): Promise
 }
 
 export async function deleteParticipant(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM participants WHERE id = ?", [id]);
     return { success: true };
@@ -432,7 +425,7 @@ export async function deleteParticipant(id: number): Promise<{ success: boolean 
 
 // CRUD pour TEMPLATES
 export async function getTemplates(): Promise<Template[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM templates");
     return rows as Template[];
@@ -443,7 +436,7 @@ export async function getTemplates(): Promise<Template[]> {
 }
 
 export async function createTemplate(formData: FormData): Promise<{ id: number }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const contenu = formData.get("contenu") as string;
@@ -457,7 +450,7 @@ export async function createTemplate(formData: FormData): Promise<{ id: number }
 }
 
 export async function getTemplate(id: number): Promise<Template | null> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM templates WHERE id = ?", [id]);
     return rows[0] as Template | null;
@@ -468,7 +461,7 @@ export async function getTemplate(id: number): Promise<Template | null> {
 }
 
 export async function updateTemplate(id: number, formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const nom = formData.get("nom") as string;
     const contenu = formData.get("contenu") as string;
@@ -482,7 +475,7 @@ export async function updateTemplate(id: number, formData: FormData): Promise<{ 
 }
 
 export async function deleteTemplate(id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM templates WHERE id = ?", [id]);
     return { success: true };
@@ -494,7 +487,7 @@ export async function deleteTemplate(id: number): Promise<{ success: boolean }> 
 
 // CRUD pour CLIENTS_PARTICIPANT
 export async function getClientParticipants(): Promise<ClientParticipant[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM clients_participant");
     return rows as ClientParticipant[];
@@ -505,7 +498,7 @@ export async function getClientParticipants(): Promise<ClientParticipant[]> {
 }
 
 export async function createClientParticipant(formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const client_id = formData.get("client_id") as string;
     const participant_id = formData.get("participant_id") as string;
@@ -518,7 +511,7 @@ export async function createClientParticipant(formData: FormData): Promise<{ suc
 }
 
 export async function deleteClientParticipant(client_id: number, participant_id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM clients_participant WHERE client_id = ? AND participant_id = ?", [client_id, participant_id]);
     return { success: true };
@@ -530,7 +523,7 @@ export async function deleteClientParticipant(client_id: number, participant_id:
 
 // CRUD pour DOMAINE_PARTICIPANT
 export async function getDomaineParticipants(): Promise<DomaineParticipant[]> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaine_participant");
     return rows as DomaineParticipant[];
@@ -541,7 +534,7 @@ export async function getDomaineParticipants(): Promise<DomaineParticipant[]> {
 }
 
 export async function createDomaineParticipant(formData: FormData): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     const domaine_id = formData.get("domaine_id") as string;
     const participant_id = formData.get("participant_id") as string;
@@ -554,12 +547,111 @@ export async function createDomaineParticipant(formData: FormData): Promise<{ su
 }
 
 export async function deleteDomaineParticipant(domaine_id: number, participant_id: number): Promise<{ success: boolean }> {
-//  await checkAdminSession();
+  //  await checkAdminSession();
   try {
     await pool.query("DELETE FROM domaine_participant WHERE domaine_id = ? AND participant_id = ?", [domaine_id, participant_id]);
     return { success: true };
   } catch (error) {
     console.error("Erreur lors de la suppression de l'association domaine-participant:", error);
     throw new Error("Impossible de supprimer l'association domaine-participant.");
+  }
+}
+
+
+
+// Conversion taille octets -> Mo/Go lisible
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + " GB";
+}
+
+export async function getAppVersions(): Promise<AppVersion[]> {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM app_versions ORDER BY id DESC");
+    return rows as AppVersion[];
+  } catch (error) {
+    console.error("Erreur lors de la récupération des versions :", error);
+    throw new Error("Impossible de récupérer les versions de l'application.");
+  }
+}
+
+export async function createAppVersion(data: {
+  os: string;
+  version: string;
+  size: string | number;
+  cpu_requirement: string;
+  ram_requirement: string;
+  storage_requirement: string;
+  download_link: string;
+}): Promise<{ id: number }> {
+  try {
+    const { os, version, size, cpu_requirement, ram_requirement, storage_requirement, download_link } = data;
+    const sizeStr = typeof size === "number" ? formatSize(size) : size;
+
+    const [result] = await pool.query(
+      `INSERT INTO app_versions 
+       (os, version, size, cpu_requirement, ram_requirement, storage_requirement, download_link) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [os, version, sizeStr, cpu_requirement, ram_requirement, storage_requirement, download_link]
+    );
+
+    return { id: (result as any).insertId };
+  } catch (error) {
+    console.error("Erreur lors de la création d'une version :", error);
+    throw new Error("Impossible de créer la version de l'application.");
+  }
+}
+
+export async function getAppVersion(id: number): Promise<AppVersion | null> {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT * FROM app_versions WHERE id = ?",
+      [id]
+    );
+    return (rows[0] as AppVersion) || null;
+  } catch (error) {
+    console.error("Erreur lors de la récupération de la version :", error);
+    throw new Error("Impossible de récupérer la version.");
+  }
+}
+
+export async function updateAppVersion(id: number, formData: FormData): Promise<{ success: boolean }> {
+  try {
+    const os = formData.get("os") as string;
+    const version = formData.get("version") as string;
+    const sizeRaw = formData.get("size");
+    const cpu_requirement = formData.get("cpu_requirement") as string;
+    const ram_requirement = formData.get("ram_requirement") as string;
+    const storage_requirement = formData.get("storage_requirement") as string;
+    const download_link = formData.get("download_link") as string;
+
+    if (!os || !version || !sizeRaw || !cpu_requirement || !ram_requirement || !storage_requirement || !download_link) {
+      throw new Error("Champs manquants dans le formulaire.");
+    }
+
+    const size = typeof sizeRaw === "string" && !isNaN(Number(sizeRaw)) ? formatSize(Number(sizeRaw)) : sizeRaw;
+
+    await pool.query(
+      `UPDATE app_versions 
+       SET os = ?, version = ?, size = ?, cpu_requirement = ?, ram_requirement = ?, storage_requirement = ?, download_link = ? 
+       WHERE id = ?`,
+      [os, version, size, cpu_requirement, ram_requirement, storage_requirement, download_link, id]
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour :", error);
+    throw new Error("Impossible de mettre à jour la version de l'application.");
+  }
+}
+
+export async function deleteAppVersion(id: number): Promise<{ success: boolean }> {
+  try {
+    await pool.query("DELETE FROM app_versions WHERE id = ?", [id]);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la suppression :", error);
+    throw new Error("Impossible de supprimer la version de l'application.");
   }
 }
