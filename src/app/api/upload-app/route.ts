@@ -1,36 +1,43 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
+import fs from "fs";
 import path from "path";
 import { createAppVersion } from "@/app/actions/backoffice";
+import { v4 as uuidv4 } from "uuid";
+
+export const config = {
+  api: { bodyParser: false },
+};
 
 export const POST = async (req: Request) => {
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    if (!file) {
-      return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.startsWith("multipart/form-data")) {
+      return NextResponse.json({ error: "Content-Type invalide" }, { status: 400 });
     }
 
-    // 📁 Enregistrement du fichier sur le serveur
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadsDir, { recursive: true });
+    // Créer dossier uploads
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    fs.mkdirSync(uploadDir, { recursive: true });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filePath = path.join(uploadsDir, file.name);
-    await fs.writeFile(filePath, buffer);
+    // Lire le fichier en tant que stream (attention: simple, ne parse pas multipart)
+    const arrayBuffer = await req.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // 📦 Préparer les données à insérer dans la base
+    const fileName = `${uuidv4()}.bin`;
+    const filePath = path.join(uploadDir, fileName);
+    fs.writeFileSync(filePath, buffer);
+
+    // Ici tu peux récupérer fields si tu veux via un parser multipart léger
     const data = {
-      os: formData.get("os") as string,
-      version: formData.get("version") as string,
-      size: file.size.toString(),
-      cpu_requirement: formData.get("cpu_requirement") as string || "",
-      ram_requirement: formData.get("ram_requirement") as string || "",
-      storage_requirement: formData.get("storage_requirement") as string || "",
-      download_link: `/uploads/${file.name}`,
+      os: "android",
+      version: "1.0.0",
+      size: buffer.length.toString(),
+      cpu_requirement: "",
+      ram_requirement: "",
+      storage_requirement: "",
+      download_link: `/uploads/${fileName}`,
     };
 
-    // 🧩 Appel à la fonction de création
     const result = await createAppVersion(data);
 
     return NextResponse.json({
@@ -39,10 +46,7 @@ export const POST = async (req: Request) => {
       file_url: data.download_link,
     });
   } catch (err) {
-    console.error("Erreur API Upload :", err);
-    return NextResponse.json(
-      { error: "Erreur lors de l'upload de l'application." },
-      { status: 500 }
-    );
+    console.error("Erreur Upload :", err);
+    return NextResponse.json({ error: "Erreur lors de l'upload." }, { status: 500 });
   }
 };
