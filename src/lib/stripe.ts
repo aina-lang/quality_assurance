@@ -1,8 +1,9 @@
+import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 
 // Initialize Stripe with the secret key from environment variables
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '', {
-  apiVersion: '2023-10-16', // Use the latest stable API version
+  // apiVersion: '2023-10-16', // Use the latest stable API version
   typescript:true
 });
 
@@ -26,9 +27,9 @@ export async function createPaymentIntent(clientId: string, accountTypeId: numbe
   }
 }
 
-// Example usage in a Next.js API route (e.g., pages/api/payment.ts)
-import { NextApiRequest, NextApiResponse } from 'next';
-import { createPaymentIntent } from '../../lib/stripe'; // Adjust the import path
+// // Example usage in a Next.js API route (e.g., pages/api/payment.ts)
+// import { NextApiRequest, NextApiResponse } from 'next';
+// import { createPaymentIntent } from '../../lib/stripe'; // Adjust the import path
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
