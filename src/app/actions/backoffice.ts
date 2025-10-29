@@ -589,6 +589,7 @@ export async function updateAppVersion(id: number, formData: FormData): Promise<
     console.error("Erreur lors de la mise à jour :", error);
     throw new Error("Impossible de mettre à jour la version de l'application.");
   }
+}
 
 export async function deleteAppVersion(id: number): Promise<{ success: boolean }> {
   try {
@@ -598,7 +599,7 @@ export async function deleteAppVersion(id: number): Promise<{ success: boolean }
       throw new Error("Version non trouvée en base de données.");
     }
 
-    const fileUrl = rows[0].download_link as string;
+    const fileUrl = (rows as any)[0].download_link as string;
 
     // 2️⃣ Supprimer la ligne SQL
     await pool.query("DELETE FROM app_versions WHERE id = ?", [id]);
