@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb'
     },
   },
+  bodyParser: {
+    sizeLimit: "10mb", // Adjust as needed, e.g., "50mb", "100mb"
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
