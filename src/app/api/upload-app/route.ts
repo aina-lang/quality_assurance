@@ -1,122 +1,135 @@
 import { NextResponse } from "next/server";
-import path from "path";
 import fs from "fs";
+import path from "path";
 import busboy from "busboy";
 import { v4 as uuidv4 } from "uuid";
 import { createAppVersion } from "@/app/actions/backoffice";
 
-// Utiliser le runtime Node.js pour avoir accès au système de fichiers
+// 🔧 Important : exécution côté Node (pas Edge)
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+
+// 🧩 Désactive le bodyParser
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export async function POST(request: Request) {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       const uploadDir = path.join(process.cwd(), "public", "uploads");
       fs.mkdirSync(uploadDir, { recursive: true });
 
-      // Initialiser Busboy avec les headers du Fetch Request
-      const bb = busboy({ headers: Object.fromEntries(request.headers) });
+      const headers = Object.fromEntries(request.headers);
+      const contentType = headers["content-type"];
 
-      let fileInfo: {
-        filename?: string;
-        filepath?: string;
-        size?: number;
-      } = {};
+      if (!contentType?.startsWith("multipart/form-data")) {
+        return resolve(
+          NextResponse.json(
+            { error: "Content-Type invalide. multipart/form-data attendu." },
+            { status: 400 }
+          )
+        );
+      }
 
-      let fields: Record<string, string> = {};
+      const bb = busboy({
+        headers,
+        limits: { fileSize: 4 * 1024 * 1024 * 1024 }, // 4 GB
+      });
 
-      // Gérer les fichiers
+      const fields: Record<string, string> = {};
+      let uploadedFilePath = "";
+      let uploadedFileSize = 0;
+      let uploadedFileName = "";
+
       bb.on("file", (_name, file, info) => {
         const { filename } = info;
         const uniqueName = `${uuidv4()}-${filename}`;
-        const saveTo = path.join(uploadDir, uniqueName);
+        const savePath = path.join(uploadDir, uniqueName);
+        uploadedFileName = uniqueName;
 
-        fileInfo = {
-          filename: uniqueName,
-          filepath: saveTo,
-          size: 0,
-        };
+        const writeStream = fs.createWriteStream(savePath);
 
-        const writeStream = fs.createWriteStream(saveTo);
-        file.pipe(writeStream);
-
-        file.on("data", (data) => {
-          fileInfo.size! += data.length;
+        file.on("data", (chunk) => {
+          uploadedFileSize += chunk.length;
         });
 
-        file.on("end", () => {
-          writeStream.end();
+        file.pipe(writeStream);
+
+        writeStream.on("close", () => {
+          uploadedFilePath = `/uploads/${uniqueName}`;
+        });
+
+        file.on("error", (err) => {
+          console.error("Erreur fichier:", err);
+          reject(
+            NextResponse.json(
+              { error: "Erreur lors de la lecture du fichier." },
+              { status: 500 }
+            )
+          );
         });
       });
 
-      // Gérer les champs du formulaire
       bb.on("field", (name, value) => {
         fields[name] = value;
       });
 
-      // Quand tout est fini
-      bb.on("close", async () => {
-        if (!fileInfo.filepath) {
+      bb.on("error", (err) => {
+        console.error("❌ Busboy error:", err);
+        reject(
+          NextResponse.json(
+            { error: "Erreur pendant le parsing du formulaire." },
+            { status: 500 }
+          )
+        );
+      });
+
+      bb.on("finish", async () => {
+        if (!uploadedFilePath) {
           return resolve(
-            NextResponse.json({ error: "Fichier manquant" }, { status: 400 })
+            NextResponse.json({ error: "Aucun fichier reçu" }, { status: 400 })
           );
         }
 
         const data = {
           os: fields.os || "",
           version: fields.version || "",
-          size: fileInfo.size?.toString() || "0",
           cpu_requirement: fields.cpu_requirement || "",
           ram_requirement: fields.ram_requirement || "",
           storage_requirement: fields.storage_requirement || "",
-          download_link: `/uploads/${fileInfo.filename}`,
+          size: uploadedFileSize.toString(),
+          download_link: uploadedFilePath,
         };
 
-        try {
-          const result = await createAppVersion(data);
+        const result = await createAppVersion(data);
 
-          resolve(
-            NextResponse.json({
-              success: true,
-              id: result.id,
-              file_url: data.download_link,
-            })
-          );
-        } catch (err) {
-          console.error("❌ createAppVersion error:", err);
-          resolve(
-            NextResponse.json(
-              { error: "Erreur lors de l'enregistrement." },
-              { status: 500 }
-            )
-          );
-        }
-      });
-
-      // Gérer les erreurs
-      bb.on("error", (err) => {
-        console.error("❌ Busboy error:", err);
-        reject(
-          NextResponse.json(
-            { error: "Erreur lors du traitement du fichier." },
-            { status: 500 }
-          )
+        resolve(
+          NextResponse.json({
+            success: true,
+            id: result.id,
+            file_url: uploadedFilePath,
+          })
         );
       });
 
-      // ✅ Convertir la requête en flux pour Busboy
-      request.body?.pipeTo(
-        new WritableStream({
-          write(chunk) {
-            bb.write(chunk);
-          },
-          close() {
-            bb.end();
-          },
-        })
-      );
+      // ✅ Correction ici : connexion fiable du flux
+      const reader = request.body?.getReader();
+      if (!reader) throw new Error("Flux de requête introuvable");
+
+      async function read() {
+        const { done, value } = await reader.read();
+        if (done) {
+          bb.end();
+          return;
+        }
+        bb.write(value);
+        await read();
+      }
+
+      await read();
     } catch (err) {
       console.error("❌ Unexpected error:", err);
       reject(
