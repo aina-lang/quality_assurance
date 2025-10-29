@@ -16,7 +16,6 @@ import { formatSize } from "@/app/lib/types";
 export default function Telechargement() {
   const [versions, setVersions] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   // Charger les versions depuis la base
   useEffect(() => {
     async function loadVersions() {
@@ -33,20 +32,25 @@ export default function Telechargement() {
     loadVersions();
   }, []);
 
-  const handleDownload = async (platform: string, fileKey: string) => {
+  const handleDownload = async (platform: string, fileUrl: string) => {
     try {
-      toast.info(`Préparation du téléchargement de la version ${platform}...`);
+      toast.info(`Préparation du téléchargement de ${platform}...`);
 
-      // 🔗 Appel de ton API GET /api/download
+      // ✅ Extraire uniquement la clé du fichier
+      let fileKey = fileUrl;
+      if (fileUrl.startsWith("http")) {
+        const parts = fileUrl.split(".com/");
+        fileKey = parts[1]; // ex: "app-versions/1761751185439-quality-assurance-1.0.0-setup.exe"
+      }
+
       const res = await fetch(`/api/download?file=${encodeURIComponent(fileKey)}`);
-
       if (!res.ok) throw new Error("Erreur lors de la génération du lien de téléchargement.");
 
       const data = await res.json();
 
       if (data.downloadUrl) {
-        toast.success(`Téléchargement de ${platform} démarré !`);
-        window.open(data.downloadUrl, "_blank"); // ouvre la vraie URL signée
+        toast.success(`Téléchargement de ${platform} lancé !`);
+        window.open(data.downloadUrl, "_blank");
         Swal.fire({
           icon: "success",
           title: `Téléchargement de ${platform} lancé !`,
