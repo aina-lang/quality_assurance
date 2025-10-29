@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '4mb'
     },
   },
+
+  api: {
+    bodyParser: {
+      sizeLimit: '4gb' // pour accepter de gros fichiers
+    }
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
