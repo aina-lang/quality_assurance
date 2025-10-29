@@ -1,32 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { pool } from '@/app/lib/db';
-import { Domain } from '@/app/lib/types';
 import { RowDataPacket } from 'mysql2/promise';
+import { verifyToken } from '@/lib/utils';
+import { Domain } from '@/app/lib/types';
 
-// Middleware JWT
-const verifyToken = (req: NextRequest): boolean => {
-    const authHeader = req.headers.get('authorization');
-    console.log('Full Auth Header:', authHeader); // Debug
-    const token = authHeader?.split(' ')[1];
-    console.log('Extracted Token:', token ? 'Present' : 'Missing');
-    if (!token) throw new Error('Token manquant');
-    try {
-        const secret = process.env.AUTH_SECRET || 'your-secret-key';
-        if (!secret) throw new Error('Clé secrète manquante dans les variables d\'environnement');
-        console.log('Using Secret Length:', secret.length); // Debug
-        jwt.verify(token, secret);
-        return true;
-    } catch (err: any) {
-        console.error('JWT Verify Error:', err.message);
-        throw new Error('Token invalide');
-    }
-};
 
 // Utilitaire pour ajouter les headers CORS
 const addCORSHeaders = (response: NextResponse): NextResponse => {
     response.headers.set('Access-Control-Allow-Origin', '*'); // Ou 'http://localhost:5173'
-    response.headers.set('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     response.headers.set('Access-Control-Max-Age', '86400');
     return response;
@@ -41,9 +23,15 @@ export async function OPTIONS(req: NextRequest): Promise<NextResponse> {
 // GET : Récupérer un domaine spécifique avec ses participants et templates
 export async function GET(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
     try {
-        console.log(params);
+        const decoded = verifyToken(req);
+        console.log(decoded);
 
-        // verifyToken(req); // Décommentez pour activer l'auth
+        if (!decoded) {
+            const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+            return addCORSHeaders(res);
+        }
+
+        verifyToken(req); // Décommentez pour activer l'auth
         const id = params.id;
         if (!id || isNaN(Number(id))) throw new Error('ID de domaine invalide');
 
@@ -79,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 // DELETE : Supprimer un domaine
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }): Promise<NextResponse> {
     try {
-        // verifyToken(req); // Décommentez pour activer l'auth
+        verifyToken(req);
         const id = params.id;
         if (!id) throw new Error('ID requis');
         const [result] = await pool.execute('DELETE FROM domains WHERE id = ?', [id]);
@@ -90,3 +78,36 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         return addCORSHeaders(NextResponse.json({ message: error.message }, { status: 400 }));
     }
 }
+
+
+
+// PUT : Mettre à jour un domaine
+export async function PUT(req: NextRequest): Promise<NextResponse> {
+    try {
+        verifyToken(req);
+    console.log(req.json);
+    
+        const body = await req.json() as Domain;
+        if (!body.id || Object.keys(body).filter(k => ['name', 'description', 'client_id'].includes(k)).length === 0) {
+            throw new Error('ID et au moins un champ à mettre à jour requis');
+        }
+        const setClauses: string[] = [];
+        const params: any[] = [];
+        if (body.name !== undefined) { setClauses.push('name = ?'); params.push(body.name); }
+        if (body.description !== undefined) { setClauses.push('description = ?'); params.push(body.description); }
+        if (body.client_id !== undefined) { setClauses.push('client_id = ?'); params.push(body.client_id); }
+        params.push(body.id);
+
+        const [updateResult] = await pool.execute(
+            `UPDATE domains SET ${setClauses.join(', ')} WHERE id = ?`,
+            params
+        );
+        if ((updateResult as any).affectedRows === 0) throw new Error('Domaine non trouvé');
+        const [updated] = await pool.execute<RowDataPacket[]>('SELECT * FROM domains WHERE id = ?', [body.id]);
+        return addCORSHeaders(NextResponse.json({ data: updated[0] }, { status: 200 }));
+    } catch (error: any) {
+        console.error('Erreur PUT domaine:', error);
+        return addCORSHeaders(NextResponse.json({ message: error.message }, { status: 400 }));
+    }
+}
+

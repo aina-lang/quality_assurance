@@ -1,3 +1,39 @@
+export interface Admin {
+  id: number;
+  email: string;
+  password?: string;
+}
+
+export interface Domaine {
+  id: number;
+  name: string;
+  description?: string;
+  client_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface Fichier {
+  id: number;
+  name: string;
+  url: string;
+  template_id: number;
+  file_type?: string;
+  size_bytes?: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface Paiement {
+  id: number;
+  client_id: number;
+  amount: number;
+  status: string;
+  payment_date: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface Client {
   id: number;
   company_name: string;
@@ -15,7 +51,7 @@ export interface AccountType {
   price: number;
   duration_days: number;
   max_domains: number;
-  features?: Record<string, any>;
+  features?: Record<string, unknown>;
   created_at: Date;
   updated_at: Date;
 }
@@ -52,11 +88,25 @@ export interface Participant {
   updated_at: Date;
 }
 
+export interface ClientParticipant {
+  id: number;
+  client_id: number;
+  participant_id: number;
+  created_at: Date;
+}
+
+export interface DomaineParticipant {
+  id: number;
+  domaine_id: number;
+  participant_id: number;
+  created_at: Date;
+}
+
 export interface Template {
   id: number;
   domain_id: number;
   name: string;
-  content?: Record<string, any>;
+  content?: Record<string, unknown>;
   preview_image?: string;
   created_at: Date;
   updated_at: Date;
@@ -84,6 +134,25 @@ export interface AppVersion {
   download_link: string;
   created_at?: Date;
   updated_at?: Date;
+}
+
+// Types pour l'authentification JWT
+export interface JWTPayload {
+  id: number;
+  email: string;
+  role: 'client' | 'participant' | 'admin';
+}
+
+// Types pour les requêtes API
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  message?: string;
+  data?: T;
+}
+
+export interface ApiError extends Error {
+  message: string;
+  statusCode?: number;
 }
 
 export function formatSize(bytes: number): string {

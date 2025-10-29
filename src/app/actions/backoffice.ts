@@ -3,8 +3,14 @@ import { getServerSession } from "next-auth";
 import { pool } from "@/app/lib/db";
 import { RowDataPacket } from "mysql2/promise";
 import {
+  Admin,
   AppVersion,
   Client,
+  ClientParticipant,
+  Domaine,
+  DomaineParticipant,
+  Fichier,
+  Paiement,
   formatSize,
   Participant,
   Template,
@@ -364,65 +370,7 @@ export async function deletePaiement(id: number): Promise<{ success: boolean }> 
   }
 }
 
-// CRUD pour PARTICIPANTS
-export async function getParticipants(): Promise<Participant[]> {
-  //  await checkAdminSession();
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM participants");
-    return rows as Participant[];
-  } catch (error) {
-    console.error("Erreur lors de la récupération des participants:", error);
-    throw new Error("Impossible de récupérer les participants.");
-  }
-}
-
-export async function createParticipant(formData: FormData): Promise<{ id: number }> {
-  //  await checkAdminSession();
-  try {
-    const email = formData.get("email") as string;
-    const nom = formData.get("nom") as string | null;
-    const [result] = await pool.query("INSERT INTO participants (email, nom) VALUES (?, ?)", [email, nom]);
-    return { id: (result as any).insertId };
-  } catch (error) {
-    console.error("Erreur lors de la création du participant:", error);
-    throw new Error("Impossible de créer le participant.");
-  }
-}
-
-export async function getParticipant(id: number): Promise<Participant | null> {
-  //  await checkAdminSession();
-  try {
-    const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM participants WHERE id = ?", [id]);
-    return rows[0] as Participant | null;
-  } catch (error) {
-    console.error("Erreur lors de la récupération du participant:", error);
-    throw new Error("Impossible de récupérer le participant.");
-  }
-}
-
-export async function updateParticipant(id: number, formData: FormData): Promise<{ success: boolean }> {
-  //  await checkAdminSession();
-  try {
-    const email = formData.get("email") as string;
-    const nom = formData.get("nom") as string | null;
-    await pool.query("UPDATE participants SET email = ?, nom = ? WHERE id = ?", [email, nom, id]);
-    return { success: true };
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour du participant:", error);
-    throw new Error("Impossible de mettre à jour le participant.");
-  }
-}
-
-export async function deleteParticipant(id: number): Promise<{ success: boolean }> {
-  //  await checkAdminSession();
-  try {
-    await pool.query("DELETE FROM participants WHERE id = ?", [id]);
-    return { success: true };
-  } catch (error) {
-    console.error("Erreur lors de la suppression du participant:", error);
-    throw new Error("Impossible de supprimer le participant.");
-  }
-}
+// CRUD pour PARTICIPANTS - Déplacé vers la section CRM ci-dessous
 
 // CRUD pour TEMPLATES
 export async function getTemplates(): Promise<Template[]> {
@@ -649,5 +597,264 @@ export async function deleteAppVersion(id: number): Promise<{ success: boolean }
   } catch (error) {
     console.error("Erreur lors de la suppression :", error);
     throw new Error("Impossible de supprimer la version de l'application.");
+  }
+}
+
+// ============================================
+// CRM ACTIONS - GESTION PARTICIPANTS
+// ============================================
+
+export async function getParticipants(filters?: { domain_id?: number; search?: string }): Promise<any[]> {
+  try {
+    let query = 'SELECT p.*, d.name as domain_name, d.client_id FROM participants p LEFT JOIN domains d ON p.domain_id = d.id WHERE 1=1';
+    const params: (string | number)[] = [];
+
+    if (filters?.domain_id) {
+      query += ' AND p.domain_id = ?';
+      params.push(filters.domain_id);
+    }
+
+    if (filters?.search) {
+      query += ' AND (p.name LIKE ? OR p.email LIKE ? OR p.poste LIKE ?)';
+      const searchPattern = `%${filters.search}%`;
+      params.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    query += ' ORDER BY p.created_at DESC';
+
+    const [rows] = await pool.query<RowDataPacket[]>(query, params);
+    return rows;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des participants:", error);
+    throw new Error("Impossible de récupérer les participants.");
+  }
+}
+
+export async function createParticipant(data: { domain_id: number; name: string; email: string; poste?: string }): Promise<{ id: number }> {
+  try {
+    const [existing] = await pool.query<RowDataPacket[]>("SELECT id FROM participants WHERE email = ?", [data.email]);
+    if (existing.length > 0) {
+      throw new Error("Un participant avec cet email existe déjà");
+    }
+
+    const [result] = await pool.query(
+      "INSERT INTO participants (domain_id, name, email, poste) VALUES (?, ?, ?, ?)",
+      [data.domain_id, data.name, data.email, data.poste || '']
+    );
+    return { id: (result as any).insertId };
+  } catch (error) {
+    console.error("Erreur lors de la création du participant:", error);
+    throw error;
+  }
+}
+
+export async function updateParticipant(id: number, data: Partial<Participant>): Promise<{ success: boolean }> {
+  try {
+    const setClauses: string[] = [];
+    const params: (string | number)[] = [];
+    
+    if (data.name !== undefined) { setClauses.push('name = ?'); params.push(data.name); }
+    if (data.email !== undefined) { setClauses.push('email = ?'); params.push(data.email); }
+    if (data.domain_id !== undefined) { setClauses.push('domain_id = ?'); params.push(data.domain_id); }
+    if (data.poste !== undefined) { setClauses.push('poste = ?'); params.push(data.poste); }
+    
+    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    
+    params.push(id);
+    await pool.query(`UPDATE participants SET ${setClauses.join(', ')} WHERE id = ?`, params);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du participant:", error);
+    throw error;
+  }
+}
+
+export async function deleteParticipant(id: number): Promise<{ success: boolean }> {
+  try {
+    await pool.query("DELETE FROM participants WHERE id = ?", [id]);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la suppression du participant:", error);
+    throw new Error("Impossible de supprimer le participant.");
+  }
+}
+
+// ============================================
+// CRM ACTIONS - GESTION CLIENTS
+// ============================================
+
+export async function getClientsWithDetails(): Promise<any[]> {
+  try {
+    const query = `
+      SELECT 
+        c.*,
+        s.status as subscription_status,
+        s.end_date as subscription_end_date,
+        at.name as account_type_name,
+        COUNT(DISTINCT d.id) as domains_count,
+        COUNT(DISTINCT p.id) as participants_count
+      FROM clients c
+      LEFT JOIN subscriptions s ON c.id = s.client_id AND s.status = 'active'
+      LEFT JOIN account_types at ON s.account_type_id = at.id
+      LEFT JOIN domains d ON c.id = d.client_id
+      LEFT JOIN participants p ON d.id = p.domain_id
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `;
+    const [rows] = await pool.query<RowDataPacket[]>(query);
+    return rows;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des clients:", error);
+    throw new Error("Impossible de récupérer les clients.");
+  }
+}
+
+export async function updateClientStatus(id: number, status: 'active' | 'inactive' | 'pending_payment'): Promise<{ success: boolean }> {
+  try {
+    await pool.query("UPDATE clients SET status = ? WHERE id = ?", [status, id]);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du statut:", error);
+    throw new Error("Impossible de mettre à jour le statut.");
+  }
+}
+
+// ============================================
+// CRM ACTIONS - GESTION ABONNEMENTS
+// ============================================
+
+export async function getSubscriptions(): Promise<any[]> {
+  try {
+    const query = `
+      SELECT 
+        s.*,
+        c.company_name,
+        c.email as client_email,
+        at.name as account_type_name,
+        at.price,
+        DATEDIFF(s.end_date, CURDATE()) as days_remaining
+      FROM subscriptions s
+      LEFT JOIN clients c ON s.client_id = c.id
+      LEFT JOIN account_types at ON s.account_type_id = at.id
+      ORDER BY s.created_at DESC
+    `;
+    const [rows] = await pool.query<RowDataPacket[]>(query);
+    return rows;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des abonnements:", error);
+    throw new Error("Impossible de récupérer les abonnements.");
+  }
+}
+
+export async function updateSubscription(id: number, data: { status?: string; account_type_id?: number; end_date?: string }): Promise<{ success: boolean }> {
+  try {
+    const setClauses: string[] = [];
+    const params: (string | number)[] = [];
+    
+    if (data.status !== undefined) { setClauses.push('status = ?'); params.push(data.status); }
+    if (data.account_type_id !== undefined) { setClauses.push('account_type_id = ?'); params.push(data.account_type_id); }
+    if (data.end_date !== undefined) { setClauses.push('end_date = ?'); params.push(data.end_date); }
+    
+    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    
+    params.push(id);
+    await pool.query(`UPDATE subscriptions SET ${setClauses.join(', ')} WHERE id = ?`, params);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de l'abonnement:", error);
+    throw error;
+  }
+}
+
+// ============================================
+// CRM ACTIONS - GESTION VIDÉOS DÉMO
+// ============================================
+
+export async function getDemoVideos(): Promise<any[]> {
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT * FROM demo_videos ORDER BY display_order ASC, created_at DESC"
+    );
+    return rows;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des vidéos:", error);
+    return [];
+  }
+}
+
+export async function createDemoVideo(data: {
+  title: string;
+  description?: string;
+  video_url: string;
+  thumbnail_url?: string;
+  duration?: number;
+  category?: string;
+  display_order?: number;
+}): Promise<{ id: number }> {
+  try {
+    const [result] = await pool.query(
+      "INSERT INTO demo_videos (title, description, video_url, thumbnail_url, duration, category, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [data.title, data.description, data.video_url, data.thumbnail_url, data.duration, data.category, data.display_order || 0]
+    );
+    return { id: (result as any).insertId };
+  } catch (error) {
+    console.error("Erreur lors de la création de la vidéo:", error);
+    throw error;
+  }
+}
+
+export async function updateDemoVideo(id: number, data: Partial<any>): Promise<{ success: boolean }> {
+  try {
+    const setClauses: string[] = [];
+    const params: (string | number)[] = [];
+    
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        setClauses.push(`${key} = ?`);
+        params.push(value);
+      }
+    });
+    
+    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    
+    params.push(id);
+    await pool.query(`UPDATE demo_videos SET ${setClauses.join(', ')} WHERE id = ?`, params);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de la vidéo:", error);
+    throw error;
+  }
+}
+
+export async function deleteDemoVideo(id: number): Promise<{ success: boolean }> {
+  try {
+    await pool.query("DELETE FROM demo_videos WHERE id = ?", [id]);
+    return { success: true };
+  } catch (error) {
+    console.error("Erreur lors de la suppression de la vidéo:", error);
+    throw new Error("Impossible de supprimer la vidéo.");
+  }
+}
+
+// ============================================
+// CRM ACTIONS - STATISTIQUES
+// ============================================
+
+export async function getCRMStatistics(): Promise<any> {
+  try {
+    const [clientsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM clients");
+    const [participantsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM participants");
+    const [domainsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM domains");
+    const [subscriptionsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM subscriptions WHERE status = 'active'");
+    
+    return {
+      total_clients: clientsCount[0]?.total || 0,
+      total_participants: participantsCount[0]?.total || 0,
+      total_domains: domainsCount[0]?.total || 0,
+      active_subscriptions: subscriptionsCount[0]?.total || 0,
+    };
+  } catch (error) {
+    console.error("Erreur lors de la récupération des statistiques:", error);
+    return { total_clients: 0, total_participants: 0, total_domains: 0, active_subscriptions: 0 };
   }
 }

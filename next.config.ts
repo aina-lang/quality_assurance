@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: '4gb'
+      bodySizeLimit: '4mb'
     },
   },
   webpack(config) {

@@ -2,14 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/app/lib/db';
 import bcrypt from 'bcryptjs';
+import { verifyToken } from '@/lib/utils';
 
 // Types
 interface Client {
   id: number;
   company_name: string;
   email: string;
-  password: string;
-  status: string;
+  password?: string;
+  status?: string;
 }
 
 interface Subscription {
@@ -28,107 +29,70 @@ interface ProfileData {
   licenseEnd: string;
 }
 
-// Add CORS headers
+// Ajout des headers CORS
 const addCORSHeaders = (response: NextResponse) => {
-  response.headers.set('Access-Control-Allow-Origin', '*'); // Adjust for production if needed
+  response.headers.set('Access-Control-Allow-Origin', '*');
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   response.headers.set('Access-Control-Max-Age', '86400');
   return response;
 };
 
-// Map account_type_id to AccountType
-const mapAccountTypeIdToType = (accountTypeId: number): 'Gratuit' | 'Premium' | 'Platinium' | 'VIP' => {
-  switch (accountTypeId) {
-    case 1:
-      return 'Premium';
-    case 2:
-      return 'Platinium';
-    case 3:
-      return 'VIP';
-    default:
-      return 'Gratuit';
-  }
-};
-
-// Handler for OPTIONS (CORS preflight)
+// OPTIONS pour preflight
 export async function OPTIONS(req: NextRequest) {
-  const response = new NextResponse(null, { status: 204 });
-  return addCORSHeaders(response);
+  return addCORSHeaders(new NextResponse(null, { status: 204 }));
 }
 
-// GET: Fetch user profile data
+// Fonction réutilisable pour récupérer profil
+async function getProfileData(clientId: number): Promise<ProfileData> {
+  const [clientsRows] = await pool.execute('SELECT id, company_name, email FROM clients WHERE id = ?', [clientId]);
+  const clients = clientsRows as Client[]
+  if (!clients.length) throw new Error('Utilisateur non trouvé');
+
+  const [subscriptionsRows] = await pool.execute(
+    'SELECT account_type_id, start_date, end_date FROM subscriptions WHERE client_id = ? AND status = ?',
+    [clientId, 'active']
+  );
+  const subscriptions = subscriptionsRows as Subscription[];
+  if (!subscriptions.length) throw new Error('Abonnement actif non trouvé');
+
+  const client = clients[0];
+  const subscription = subscriptions[0];
+
+  return {
+    company_name: client.company_name,
+    email: client.email,
+    accountType_id: subscription.account_type_id,
+    licenseStart: subscription.start_date,
+    licenseEnd: subscription.end_date,
+  };
+}
+
+// GET: récupérer profil
 export async function GET(req: NextRequest) {
   try {
-    // Extract client_id from query parameters (e.g., /api/profile?client_id=3)
-    const clientId = req.nextUrl.searchParams.get('client_id');
-    if (!clientId || isNaN(parseInt(clientId))) throw new Error('client_id manquant ou invalide');
+    verifyToken(req);
+    const clientId = Number(req.nextUrl.searchParams.get('client_id'));
+    if (!clientId) throw new Error('client_id manquant ou invalide');
 
-    // Fetch client data
-    const [clients]: [Client[]] = await pool.execute('SELECT id, company_name, email, status FROM clients WHERE id = ?', [
-      clientId,
-    ]);
-    if (clients.length === 0) throw new Error('Utilisateur non trouvé');
-
-    // Fetch subscription data
-    const [subscriptions]: [Subscription[]] = await pool.execute(
-      'SELECT account_type_id, start_date, end_date, status FROM subscriptions WHERE client_id = ? AND status = ?',
-      [clientId, 'active']
-    );
-    if (subscriptions.length === 0) throw new Error('Abonnement actif non trouvé');
-
-    const client = clients[0];
-    const subscription = subscriptions[0];
-
-    const profileData: ProfileData = {
-      company_name: client.company_name,
-      email: client.email,
-      accountType_id: subscription.account_type_id,
-      licenseStart: subscription.start_date,
-      licenseEnd: subscription.end_date,
-    };
-
-    const response = NextResponse.json({ data: profileData }, { status: 200 });
-    return addCORSHeaders(response);
+    const profileData = await getProfileData(clientId);
+    return addCORSHeaders(NextResponse.json({ data: profileData }, { status: 200 }));
   } catch (error: any) {
-    console.error('Error fetching profile data:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 400 });
-    return addCORSHeaders(response);
+    console.error('GET profile error:', error);
+    return addCORSHeaders(NextResponse.json({ message: error.message }, { status: 400 }));
   }
 }
 
-// PUT: Update user profile data
+// PUT: mettre à jour profil
 export async function PUT(req: NextRequest) {
   try {
-    const body = await req.json() as Partial<ProfileData & { password?: string; confirmPassword?: string; client_id: number }>;
+    verifyToken(req);
+    const body = (await req.json()) as Partial<ProfileData & { password?: string; confirmPassword?: string; client_id: number }>;
+    if (!body.client_id) throw new Error('client_id manquant ou invalide');
+    if (!body.company_name?.trim()) throw new Error('Le nom ne peut pas être vide');
+    if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) throw new Error('Email invalide');
+    if (body.password && body.password !== body.confirmPassword) throw new Error('Les mots de passe ne correspondent pas');
 
-    // Validate client_id
-    if (!body.client_id || isNaN(body.client_id)) throw new Error('client_id manquant ou invalide');
-
-    // Validate input
-    if (!body.company_name || body.company_name.trim().length === 0) {
-      throw new Error('Le nom ne peut pas être vide');
-    }
-    if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
-      throw new Error('Veuillez entrer un email valide');
-    }
-    if (body.password && (body.password.length < 8 || !/[a-zA-Z]/.test(body.password) || !/\d/.test(body.password))) {
-      throw new Error('Le mot de passe doit contenir au moins 8 caractères, dont des lettres et des chiffres');
-    }
-    if (body.password && body.password !== body.confirmPassword) {
-      throw new Error('Les mots de passe ne correspondent pas');
-    }
-
-    // Check if email is already in use by another user
-    const [existingClients]: [Client[]] = await pool.execute('SELECT id FROM clients WHERE email = ? AND id != ?', [
-      body.email,
-      body.client_id,
-    ]);
-    if (existingClients.length > 0) {
-      throw new Error('Cet email est déjà utilisé par un autre utilisateur');
-    }
-
-    // Update client data
     const updateFields: string[] = ['company_name = ?', 'email = ?', 'updated_at = NOW()'];
     const updateParams: any[] = [body.company_name, body.email];
 
@@ -140,24 +104,17 @@ export async function PUT(req: NextRequest) {
 
     updateParams.push(body.client_id);
 
-    const [updateResult] = await pool.execute(
+    const [updateResult]: any = await pool.execute(
       `UPDATE clients SET ${updateFields.join(', ')} WHERE id = ?`,
       updateParams
     );
 
-    if ((updateResult as any).affectedRows === 0) throw new Error('Utilisateur non trouvé');
+    if (updateResult.affectedRows === 0) throw new Error('Utilisateur non trouvé');
 
-    // Fetch updated client data
-    const [updatedClients]: [Client[]] = await pool.execute('SELECT company_name, email FROM clients WHERE id = ?', [
-      body.client_id,
-    ]);
-    if (updatedClients.length === 0) throw new Error('Utilisateur non trouvé après mise à jour');
-
-    const response = NextResponse.json({ data: updatedClients[0] }, { status: 200 });
-    return addCORSHeaders(response);
+    const profileData = await getProfileData(body.client_id);
+    return addCORSHeaders(NextResponse.json({ data: profileData }, { status: 200 }));
   } catch (error: any) {
-    console.error('Error updating profile data:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 400 });
-    return addCORSHeaders(response);
+    console.error('PUT profile error:', error);
+    return addCORSHeaders(NextResponse.json({ message: error.message }, { status: 400 }));
   }
 }

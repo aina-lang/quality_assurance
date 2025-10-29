@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { pool } from '@/app/lib/db';
 import { Participant } from '@/app/lib/types';
+import { verifyToken } from '@/lib/utils';
+import { RowDataPacket } from 'mysql2/promise';
 
-// Middleware JWT
-const verifyToken = (req: NextRequest) => {
-  const authHeader = req.headers.get('authorization');
-  console.log('Full Auth Header:', authHeader); // Debug header
-  const token = authHeader?.split(' ')[1];
-  console.log('Extracted Token:', token ? 'Present' : 'Missing'); // Évite de logger le token entier en prod
-  if (!token) throw new Error('Token manquant');
-  try {
-    const secret = process.env.AUTH_SECRET || 'your-secret-key';
-    if (!secret) throw new Error('Clé secrète manquante dans les variables d\'environnement');
-    console.log('Using Secret Length:', secret.length); // Debug sans révéler la clé
-    jwt.verify(token, secret);
-    return true;
-  } catch (err: any) {
-    console.error('JWT Verify Error:', err.message); // Log l'erreur exacte
-    throw new Error('Token invalide');
-  }
-};
 
 // Fonction utilitaire pour ajouter les headers CORS à une réponse
 const addCORSHeaders = (response: NextResponse) => {
@@ -32,7 +15,7 @@ const addCORSHeaders = (response: NextResponse) => {
 };
 
 // Handler OPTIONS pour preflight CORS
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   const response = new NextResponse(null, { status: 204 });
   return addCORSHeaders(response);
 }
@@ -40,22 +23,34 @@ export async function OPTIONS(req: NextRequest) {
 // GET : Lister tous les participants
 export async function GET(req: NextRequest) {
   try {
-    // verifyToken(req); // Décommentez pour activer l'auth
-    const [participants] = await pool.execute('SELECT * FROM participants ORDER BY created_at DESC');
+    const decoded = verifyToken(req);
+    console.log(decoded);
+
+    if (!decoded) {
+      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      return addCORSHeaders(res);
+    }
+    const [participants] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants ORDER BY created_at DESC');
     const response = NextResponse.json({ data: participants }, { status: 200 });
     return addCORSHeaders(response);
-  } catch (error: any) {
-    console.error('Erreur GET participants:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 401 });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Erreur GET participants:', err);
+    const response = NextResponse.json({ message: err.message }, { status: 401 });
     return addCORSHeaders(response);
   }
 }
 
 // POST : Créer un participant
-// POST : Créer un participant
 export async function POST(req: NextRequest) {
   try {
-    // verifyToken(req); // Décommentez pour activer l'auth
+    const decoded = verifyToken(req);
+    console.log(decoded);
+
+    if (!decoded) {
+      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      return addCORSHeaders(res);
+    }
     const body = await req.json() as Omit<Participant, 'id' | 'created_at' | 'updated_at'>;
     console.log(body);
 
@@ -64,11 +59,11 @@ export async function POST(req: NextRequest) {
     }
 
     // ✅ Vérifier si email existe déjà
-    const [existing] = await pool.execute(
+    const [existing] = await pool.execute<RowDataPacket[]>(
       'SELECT id FROM participants WHERE email = ?',
       [body.email]
     );
-    if ((existing as any[]).length > 0) {
+    if (existing.length > 0) {
       throw new Error('Un participant avec cet email existe déjà');
     }
 
@@ -77,15 +72,20 @@ export async function POST(req: NextRequest) {
       [body.domain_id, body.name, body.email, body.poste]
     );
 
-    const insertId = (result as any).insertId;
-    const [newParticipant] = await pool.execute('SELECT * FROM participants WHERE id = ?', [insertId]);
+    const insertId = (result as RowDataPacket[] & { insertId?: number })[0]?.insertId;
+    if (!insertId) {
+      throw new Error('Erreur lors de la création du participant');
+    }
+    
+    const [newParticipant] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants WHERE id = ?', [insertId]);
 
-    const response = NextResponse.json({ data: (newParticipant as any)[0] }, { status: 201 });
+    const response = NextResponse.json({ data: newParticipant[0] as Participant }, { status: 201 });
     return addCORSHeaders(response);
 
-  } catch (error: any) {
-    console.error('Erreur POST participant:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 400 });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Erreur POST participant:', err);
+    const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }
 }
@@ -94,13 +94,19 @@ export async function POST(req: NextRequest) {
 // PUT : Mettre à jour un participant
 export async function PUT(req: NextRequest) {
   try {
-    // verifyToken(req); // Décommentez pour activer l'auth
+    const decoded = verifyToken(req);
+    console.log(decoded);
+
+    if (!decoded) {
+      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      return addCORSHeaders(res);
+    }
     const body = await req.json() as Participant;
     if (!body.id || Object.keys(body).filter(k => ['name', 'email', 'domain_id', 'poste'].includes(k)).length === 0) {
       throw new Error('ID et au moins un champ à mettre à jour requis');
     }
     const setClauses: string[] = [];
-    const params: any[] = [];
+    const params: (string | number)[] = [];
     if (body.name !== undefined) { setClauses.push('name = ?'); params.push(body.name); }
     if (body.email !== undefined) { setClauses.push('email = ?'); params.push(body.email); }
     if (body.domain_id !== undefined) { setClauses.push('domain_id = ?'); params.push(body.domain_id); }
@@ -111,13 +117,14 @@ export async function PUT(req: NextRequest) {
       `UPDATE participants SET ${setClauses.join(', ')} WHERE id = ?`,
       params
     );
-    if ((updateResult as any).affectedRows === 0) throw new Error('Participant non trouvé');
-    const [updated] = await pool.execute('SELECT * FROM participants WHERE id = ?', [body.id]);
-    const response = NextResponse.json({ data: updated[0] }, { status: 200 });
+    if ((updateResult as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant non trouvé');
+    const [updated] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants WHERE id = ?', [body.id]);
+    const response = NextResponse.json({ data: updated[0] as Participant }, { status: 200 });
     return addCORSHeaders(response);
-  } catch (error: any) {
-    console.error('Erreur PUT participant:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 400 });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Erreur PUT participant:', err);
+    const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }
 }
@@ -125,16 +132,23 @@ export async function PUT(req: NextRequest) {
 // DELETE : Supprimer un participant
 export async function DELETE(req: NextRequest) {
   try {
-    // verifyToken(req); // Décommentez pour activer l'auth
+    const decoded = verifyToken(req);
+    console.log(decoded);
+
+    if (!decoded) {
+      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      return addCORSHeaders(res);
+    }
     const { id } = await req.json() as { id: number };
     if (!id) throw new Error('ID requis');
     const [result] = await pool.execute('DELETE FROM participants WHERE id = ?', [id]);
-    if ((result as any).affectedRows === 0) throw new Error('Participant non trouvé');
+    if ((result as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant non trouvé');
     const response = NextResponse.json({ message: 'Participant supprimé' }, { status: 200 });
     return addCORSHeaders(response);
-  } catch (error: any) {
-    console.error('Erreur DELETE participant:', error);
-    const response = NextResponse.json({ message: error.message }, { status: 400 });
+  } catch (error) {
+    const err = error as Error;
+    console.error('Erreur DELETE participant:', err);
+    const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }
 }
