@@ -1,26 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
-    ignoreBuildErrors: true // Ignores all TypeScript errors during build
+    ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true // Optionally ignore ESLint errors (see below)
-  },
+
   experimental: {
+    // ✅ C’est CE paramètre qui supprime la limite 10 MB sur les requêtes API/App Router
+    proxyClientMaxBodySize: 4 * 1024 * 1024 * 1024, // 4 GB
 
+    // ✅ Optionnel mais utile si tu utilises Server Actions ailleurs
     serverActions: {
-      bodySizeLimit: '4gb',
-
+      bodySizeLimit: "4gb",
     },
   },
 
-  api: {
-    bodyParser: {
-      sizeLimit: '4gb' // pour accepter de gros fichiers
-    }
-  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

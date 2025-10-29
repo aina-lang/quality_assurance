@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Cloud, Upload, Check, AlertCircle } from "lucide-react";
 import { formatSize } from "@/app/lib/types";
+import { createAppVersion } from "@/app/actions/backoffice";
 
 export default function UploadAppVersion() {
   const [file, setFile] = useState<File | null>(null);
@@ -56,74 +57,67 @@ export default function UploadAppVersion() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setNotification({ type: "error", message: "Veuillez sélectionner un fichier à uploader." });
-      setTimeout(() => setNotification(null), 4000);
+      setNotification({ type: "error", message: "Veuillez sélectionner un fichier" });
       return;
     }
 
     setLoading(true);
     setProgress(0);
 
-    const formDataObj = new FormData();
-    formDataObj.append("os", formData.os);
-    formDataObj.append("version", formData.version);
-    formDataObj.append("cpu_requirement", formData.cpu_requirement);
-    formDataObj.append("ram_requirement", formData.ram_requirement);
-    formDataObj.append("storage_requirement", formData.storage_requirement);
-    formDataObj.append("size", formData.size);
-    formDataObj.append("file", file);
-
     try {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/api/upload-app");
+      // Étape 1: Demande URL pré-signée à ton API
+      const res = await fetch("/api/upload-app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+        }),
+      });
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
+      if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+      const { uploadUrl, fileUrl } = await res.json();
 
-      xhr.onload = () => {
-        setLoading(false);
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success) {
-            setNotification({ type: "success", message: "Version uploadée avec succès !" });
-            setFile(null);
-            setProgress(0);
-            setFormData({
-              os: "",
-              version: "",
-              cpu_requirement: "",
-              ram_requirement: "",
-              storage_requirement: "",
-              size: "",
-            });
-            setTimeout(() => setNotification(null), 4000);
-          } else {
-            setNotification({ type: "error", message: response.error || "Erreur lors de l'upload." });
-            setTimeout(() => setNotification(null), 4000);
+      // Étape 2: Upload direct vers DigitalOcean
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setProgress(Math.round((event.loaded / event.total) * 100));
           }
-        } else {
-          setNotification({ type: "error", message: "Erreur lors de l'upload." });
-          setTimeout(() => setNotification(null), 4000);
-        }
-      };
+        };
 
-      xhr.onerror = () => {
-        setLoading(false);
-        setNotification({ type: "error", message: "Erreur lors de l'upload." });
-        setTimeout(() => setNotification(null), 4000);
-      };
+        xhr.onload = () => (xhr.status === 200 ? resolve() : reject(xhr.statusText));
+        xhr.onerror = reject;
+        xhr.send(file);
+      });
 
-      xhr.send(formDataObj);
-    } catch (error) {
-      console.error(error);
+      // Étape 3: (optionnelle) enregistrer en base
+      
+      await createAppVersion({
+        os: formData.os,
+        version: formData.version,
+        cpu_requirement: formData.cpu_requirement,
+        ram_requirement: formData.ram_requirement,
+        storage_requirement: formData.storage_requirement,
+        size: file.size.toString(),
+        download_link: fileUrl,
+      });
+      
+
+      setNotification({ type: "success", message: "Upload réussi 🎉" });
+    } catch (err) {
+      console.error("❌ Erreur complète :", err);
+      setNotification({ type: "error", message: "Erreur pendant l’upload" });
+    } finally {
       setLoading(false);
-      setNotification({ type: "error", message: "Erreur lors de l'upload." });
-      setTimeout(() => setNotification(null), 4000);
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -131,11 +125,10 @@ export default function UploadAppVersion() {
       {notification && (
         <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-top-4">
           <div
-            className={`flex items-center gap-3 px-5 py-4 rounded-xl backdrop-blur-md border shadow-lg ${
-              notification.type === "success"
-                ? "bg-emerald-100 border-emerald-500 text-emerald-700"
-                : "bg-red-100 border-red-500 text-red-700"
-            }`}
+            className={`flex items-center gap-3 px-5 py-4 rounded-xl backdrop-blur-md border shadow-lg ${notification.type === "success"
+              ? "bg-emerald-100 border-emerald-500 text-emerald-700"
+              : "bg-red-100 border-red-500 text-red-700"
+              }`}
           >
             {notification.type === "success" ? <Check size={20} /> : <AlertCircle size={20} />}
             <span className="text-sm font-medium">{notification.message}</span>
@@ -215,11 +208,10 @@ export default function UploadAppVersion() {
 
           {/* Drag & Drop Zone */}
           <div
-            className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${
-              dragActive
-                ? "border-blue-500 bg-blue-50 shadow-lg"
-                : "border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400"
-            }`}
+            className={`relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${dragActive
+              ? "border-blue-500 bg-blue-50 shadow-lg"
+              : "border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-gray-400"
+              }`}
             onClick={() => document.getElementById("fileInput")?.click()}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -277,11 +269,10 @@ export default function UploadAppVersion() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-              loading
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg active:scale-95"
-            }`}
+            className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${loading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg active:scale-95"
+              }`}
           >
             {loading ? (
               <>
