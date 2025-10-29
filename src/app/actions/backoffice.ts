@@ -17,6 +17,7 @@ import {
 } from "@/app/lib/types";
 
 import bcrypt from "bcryptjs";
+import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 // Vérification de la session admin
 async function checkAdminSession(): Promise<void> {
   const session = await getServerSession();
@@ -588,15 +589,54 @@ export async function updateAppVersion(id: number, formData: FormData): Promise<
     console.error("Erreur lors de la mise à jour :", error);
     throw new Error("Impossible de mettre à jour la version de l'application.");
   }
-}
 
 export async function deleteAppVersion(id: number): Promise<{ success: boolean }> {
   try {
+    // 1️⃣ Récupérer d'abord le lien de téléchargement
+    const [rows] = await pool.query("SELECT download_link FROM app_versions WHERE id = ?", [id]);
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error("Version non trouvée en base de données.");
+    }
+
+    const fileUrl = rows[0].download_link as string;
+
+    // 2️⃣ Supprimer la ligne SQL
     await pool.query("DELETE FROM app_versions WHERE id = ?", [id]);
+
+    // 3️⃣ Extraire la clé (path du fichier) depuis l’URL publique
+    // Exemple: https://smartfilepro.sfo3.digitaloceanspaces.com/app-versions/1730142523123-setup.exe
+    const bucketName = process.env.DO_SPACES_BUCKET!;
+    const endpoint = process.env.DO_SPACES_ENDPOINT!.replace("https://", "");
+    const key = fileUrl.split(`${bucketName}.${endpoint}/`)[1]; // => app-versions/...
+
+    if (!key) {
+      console.warn("⚠️ Impossible d’extraire la clé du fichier à supprimer:", fileUrl);
+      return { success: true };
+    }
+
+    // 4️⃣ Supprimer le fichier du bucket DigitalOcean
+    const s3 = new S3Client({
+      region: process.env.DO_SPACES_REGION || "sfo3",
+      endpoint: process.env.DO_SPACES_ENDPOINT || "https://sfo3.digitaloceanspaces.com",
+      forcePathStyle: false,
+      credentials: {
+        accessKeyId: process.env.DO_SPACES_KEY || "",
+        secretAccessKey: process.env.DO_SPACES_SECRET || "",
+      },
+    });
+
+    const deleteCommand = new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+    });
+
+    await s3.send(deleteCommand);
+    console.log(`🗑️ Fichier supprimé de DigitalOcean: ${key}`);
+
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression :", error);
-    throw new Error("Impossible de supprimer la version de l'application.");
+    console.error("❌ Erreur lors de la suppression complète:", error);
+    throw new Error("Échec de la suppression de la version ou du fichier associé.");
   }
 }
 
@@ -652,14 +692,14 @@ export async function updateParticipant(id: number, data: Partial<Participant>):
   try {
     const setClauses: string[] = [];
     const params: (string | number)[] = [];
-    
+
     if (data.name !== undefined) { setClauses.push('name = ?'); params.push(data.name); }
     if (data.email !== undefined) { setClauses.push('email = ?'); params.push(data.email); }
     if (data.domain_id !== undefined) { setClauses.push('domain_id = ?'); params.push(data.domain_id); }
     if (data.poste !== undefined) { setClauses.push('poste = ?'); params.push(data.poste); }
-    
+
     if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
-    
+
     params.push(id);
     await pool.query(`UPDATE participants SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
@@ -750,13 +790,13 @@ export async function updateSubscription(id: number, data: { status?: string; ac
   try {
     const setClauses: string[] = [];
     const params: (string | number)[] = [];
-    
+
     if (data.status !== undefined) { setClauses.push('status = ?'); params.push(data.status); }
     if (data.account_type_id !== undefined) { setClauses.push('account_type_id = ?'); params.push(data.account_type_id); }
     if (data.end_date !== undefined) { setClauses.push('end_date = ?'); params.push(data.end_date); }
-    
+
     if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
-    
+
     params.push(id);
     await pool.query(`UPDATE subscriptions SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
@@ -807,16 +847,16 @@ export async function updateDemoVideo(id: number, data: Partial<any>): Promise<{
   try {
     const setClauses: string[] = [];
     const params: (string | number)[] = [];
-    
+
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined) {
         setClauses.push(`${key} = ?`);
         params.push(value);
       }
     });
-    
+
     if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
-    
+
     params.push(id);
     await pool.query(`UPDATE demo_videos SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
@@ -846,7 +886,7 @@ export async function getCRMStatistics(): Promise<any> {
     const [participantsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM participants");
     const [domainsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM domains");
     const [subscriptionsCount] = await pool.query<RowDataPacket[]>("SELECT COUNT(*) as total FROM subscriptions WHERE status = 'active'");
-    
+
     return {
       total_clients: clientsCount[0]?.total || 0,
       total_participants: participantsCount[0]?.total || 0,

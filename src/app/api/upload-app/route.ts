@@ -5,17 +5,17 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-
+// 🧠 Configuration DigitalOcean Spaces
 const s3 = new S3Client({
   region: process.env.DO_SPACES_REGION || "sfo3",
   endpoint: process.env.DO_SPACES_ENDPOINT || "https://sfo3.digitaloceanspaces.com",
   forcePathStyle: false,
   credentials: {
     accessKeyId: process.env.DO_SPACES_KEY || "DO00X98QVUBHQ9NY8FRX",
-    secretAccessKey: process.env.DO_SPACES_SECRET || "frk9e06ywUB2+MOTVy/dia8Rvv3GljZqhS82nKCFC6g",
+    secretAccessKey:
+      process.env.DO_SPACES_SECRET || "frk9e06ywUB2+MOTVy/dia8Rvv3GljZqhS82nKCFC6g",
   },
 });
-
 
 export async function POST(req: Request) {
   try {
@@ -28,21 +28,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // ➕ on stocke dans le dossier "app-versions"
+    // 🗂️ Stockage dans le dossier "app-versions/"
     const key = `app-versions/${Date.now()}-${filename}`;
 
-    // Commande pour upload
+    // 🔐 Prépare la commande pour générer une URL signée
     const command = new PutObjectCommand({
-      Bucket: process.env.DO_SPACES_BUCKET!,
+      Bucket: process.env.DO_SPACES_BUCKET || "smartfilepro",
       Key: key,
       ContentType: contentType,
-      ACL: "public-read", // Rend le fichier accessible publiquement
+      ACL: "public-read", // pour que le fichier soit accessible via URL publique
     });
 
-    // URL pré-signée valide 5 min
+    // ⏳ URL pré-signée (valable 5 minutes)
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
-    // URL publique du fichier final
+    // 🌐 URL publique finale du fichier
     const fileUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
       "https://",
       `https://${process.env.DO_SPACES_BUCKET!}.`

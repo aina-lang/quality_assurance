@@ -65,7 +65,7 @@ export default function UploadAppVersion() {
     setProgress(0);
 
     try {
-      // Étape 1: Demande URL pré-signée à ton API
+      // Étape 1️⃣ — Obtenir l’URL pré-signée
       const res = await fetch("/api/upload-app", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -78,7 +78,7 @@ export default function UploadAppVersion() {
       if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
       const { uploadUrl, fileUrl } = await res.json();
 
-      // Étape 2: Upload direct vers DigitalOcean
+      // Étape 2️⃣ — Upload direct vers DigitalOcean
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", uploadUrl);
@@ -95,8 +95,7 @@ export default function UploadAppVersion() {
         xhr.send(file);
       });
 
-      // Étape 3: (optionnelle) enregistrer en base
-      
+      // Étape 3️⃣ — (optionnel) Enregistrer en base
       await createAppVersion({
         os: formData.os,
         version: formData.version,
@@ -106,7 +105,6 @@ export default function UploadAppVersion() {
         size: file.size.toString(),
         download_link: fileUrl,
       });
-      
 
       setNotification({ type: "success", message: "Upload réussi 🎉" });
     } catch (err) {
