@@ -9,8 +9,10 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true // Optionally ignore ESLint errors (see below)
   },
   experimental: {
+
     serverActions: {
-      bodySizeLimit: '4mb'
+      bodySizeLimit: '4gb',
+
     },
   },
 

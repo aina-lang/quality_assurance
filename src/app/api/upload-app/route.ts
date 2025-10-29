@@ -1,87 +1,130 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
 import path from "path";
-import formidable, { File as FormidableFile } from "formidable";
+import fs from "fs";
+import busboy from "busboy";
 import { v4 as uuidv4 } from "uuid";
 import { createAppVersion } from "@/app/actions/backoffice";
 
-// Désactiver le body parser
-export const config = {
-  api: { bodyParser: false },
-};
+// Utiliser le runtime Node.js pour avoir accès au système de fichiers
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
-export const POST = async (req: any) => {
-  try {
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    fs.mkdirSync(uploadDir, { recursive: true });
+export async function POST(request: Request) {
+  return new Promise((resolve, reject) => {
+    try {
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      fs.mkdirSync(uploadDir, { recursive: true });
 
-    const form = formidable({
-      uploadDir,
-      keepExtensions: true,
-      maxFileSize: 4 * 1024 * 1024 * 1024, // 4 Go
-    });
+      // Initialiser Busboy avec les headers du Fetch Request
+      const bb = busboy({ headers: Object.fromEntries(request.headers) });
 
-    return new Promise((resolve) => {
-      form.parse(req, async (err, fields, files) => {
-        if (err) {
-          console.error("❌ Formidable error:", err);
-          return resolve(
-            NextResponse.json(
-              { error: "Erreur lors de l'upload de l'application." },
-              { status: 500 }
-            )
-          );
-        }
+      let fileInfo: {
+        filename?: string;
+        filepath?: string;
+        size?: number;
+      } = {};
 
-        const uploadedFiles = files.file;
-        if (!uploadedFiles) {
+      let fields: Record<string, string> = {};
+
+      // Gérer les fichiers
+      bb.on("file", (_name, file, info) => {
+        const { filename } = info;
+        const uniqueName = `${uuidv4()}-${filename}`;
+        const saveTo = path.join(uploadDir, uniqueName);
+
+        fileInfo = {
+          filename: uniqueName,
+          filepath: saveTo,
+          size: 0,
+        };
+
+        const writeStream = fs.createWriteStream(saveTo);
+        file.pipe(writeStream);
+
+        file.on("data", (data) => {
+          fileInfo.size! += data.length;
+        });
+
+        file.on("end", () => {
+          writeStream.end();
+        });
+      });
+
+      // Gérer les champs du formulaire
+      bb.on("field", (name, value) => {
+        fields[name] = value;
+      });
+
+      // Quand tout est fini
+      bb.on("close", async () => {
+        if (!fileInfo.filepath) {
           return resolve(
             NextResponse.json({ error: "Fichier manquant" }, { status: 400 })
           );
         }
 
-        let file: FormidableFile;
-        if (Array.isArray(uploadedFiles)) {
-          file = uploadedFiles[0];
-        } else {
-          file = uploadedFiles as FormidableFile;
-        }
-
-        const uniqueName = `${uuidv4()}-${file.originalFilename || file.newFilename}`;
-        const finalPath = path.join(uploadDir, uniqueName);
-        fs.renameSync(file.filepath, finalPath);
-
-        const getString = (value: string | string[] | undefined) => {
-          if (Array.isArray(value)) return value[0];
-          return value ?? "";
-        };
-
         const data = {
-          os: getString(fields.os),
-          version: getString(fields.version),
-          size: file.size.toString(),
-          cpu_requirement: getString(fields.cpu_requirement),
-          ram_requirement: getString(fields.ram_requirement),
-          storage_requirement: getString(fields.storage_requirement),
-          download_link: `/uploads/${uniqueName}`,
+          os: fields.os || "",
+          version: fields.version || "",
+          size: fileInfo.size?.toString() || "0",
+          cpu_requirement: fields.cpu_requirement || "",
+          ram_requirement: fields.ram_requirement || "",
+          storage_requirement: fields.storage_requirement || "",
+          download_link: `/uploads/${fileInfo.filename}`,
         };
 
-        const result = await createAppVersion(data);
+        try {
+          const result = await createAppVersion(data);
 
-        return resolve(
-          NextResponse.json({
-            success: true,
-            id: result.id,
-            file_url: data.download_link,
-          })
+          resolve(
+            NextResponse.json({
+              success: true,
+              id: result.id,
+              file_url: data.download_link,
+            })
+          );
+        } catch (err) {
+          console.error("❌ createAppVersion error:", err);
+          resolve(
+            NextResponse.json(
+              { error: "Erreur lors de l'enregistrement." },
+              { status: 500 }
+            )
+          );
+        }
+      });
+
+      // Gérer les erreurs
+      bb.on("error", (err) => {
+        console.error("❌ Busboy error:", err);
+        reject(
+          NextResponse.json(
+            { error: "Erreur lors du traitement du fichier." },
+            { status: 500 }
+          )
         );
       });
-    });
-  } catch (err) {
-    console.error("❌ Unexpected error:", err);
-    return NextResponse.json(
-      { error: "Erreur inattendue lors de l'upload." },
-      { status: 500 }
-    );
-  }
-};
+
+      // ✅ Convertir la requête en flux pour Busboy
+      request.body?.pipeTo(
+        new WritableStream({
+          write(chunk) {
+            bb.write(chunk);
+          },
+          close() {
+            bb.end();
+          },
+        })
+      );
+    } catch (err) {
+      console.error("❌ Unexpected error:", err);
+      reject(
+        NextResponse.json(
+          { error: "Erreur inattendue lors de l'upload." },
+          { status: 500 }
+        )
+      );
+    }
+  });
+}
