@@ -33,11 +33,40 @@ export default function Telechargement() {
     loadVersions();
   }, []);
 
-  const handleDownload = (platform: string, link: string) => {
-    toast.success(`Téléchargement de la version ${platform} commencé !`);
-    window.open(link, "_blank");
-    Swal.fire(`Téléchargement de la version ${platform} commencé !`);
+  const handleDownload = async (platform: string, fileKey: string) => {
+    try {
+      toast.info(`Préparation du téléchargement de la version ${platform}...`);
+
+      // 🔗 Appel de ton API GET /api/download
+      const res = await fetch(`/api/download?file=${encodeURIComponent(fileKey)}`);
+
+      if (!res.ok) throw new Error("Erreur lors de la génération du lien de téléchargement.");
+
+      const data = await res.json();
+
+      if (data.downloadUrl) {
+        toast.success(`Téléchargement de ${platform} démarré !`);
+        window.open(data.downloadUrl, "_blank"); // ouvre la vraie URL signée
+        Swal.fire({
+          icon: "success",
+          title: `Téléchargement de ${platform} lancé !`,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } else {
+        throw new Error("Lien de téléchargement introuvable.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Impossible de télécharger cette version.");
+      Swal.fire({
+        icon: "error",
+        title: "Erreur de téléchargement",
+        text: "Veuillez réessayer plus tard.",
+      });
+    }
   };
+
 
   // Icônes selon le système
   const getIcon = (os: string) => {
@@ -99,7 +128,7 @@ export default function Telechargement() {
                     </div>
                   </div>
 
-                  <Button className="w-full" size="lg" onClick={() => handleDownload(v.os, v.download_link)}>
+                  <Button className="w-full" size="lg" onClick={() => handleDownload(v.os, v.file_key || v.download_link)}>
                     <Download className="mr-2 h-4 w-4" />
                     Télécharger pour {v.os}
                   </Button>

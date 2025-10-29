@@ -36,7 +36,9 @@ export async function POST(req: Request) {
       Bucket: process.env.DO_SPACES_BUCKET || "smartfilepro",
       Key: key,
       ContentType: contentType,
-      ACL: "public-read", // pour que le fichier soit accessible via URL publique
+      ACL: "public-read",
+ 
+      // pour que le fichier soit accessible via URL publique
     });
 
     // ⏳ URL pré-signée (valable 5 minutes)

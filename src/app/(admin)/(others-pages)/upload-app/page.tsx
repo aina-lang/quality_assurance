@@ -28,7 +28,6 @@ export default function GestionAppVersions() {
     }
 
     fetchAppVersions();
-
     return () => {
       isMounted = false;
     };
