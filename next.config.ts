@@ -1,24 +1,26 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typescript: { ignoreBuildErrors: true },
+  // ✅ Ignore les erreurs TypeScript pendant la build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 
+  // ✅ Ignore les erreurs ESLint pendant la build
+
+  // ✅ Permet les gros fichiers (jusqu’à 4 Go)
   experimental: {
     proxyClientMaxBodySize: 4 * 1024 * 1024 * 1024, // 4 GB
     serverActions: { bodySizeLimit: "4gb" },
   },
 
-  // ❌ supprime cette section pour Turbopack :
-  // webpack(config) {
-  //   config.module.rules.push({
-  //     test: /\.svg$/,
-  //     use: ["@svgr/webpack"],
-  //   });
-  //   return config;
-  // },
-
-  // ✅ Ajoute à la place :
+  // ✅ Active Turbopack sans config spéciale
   turbopack: {},
+
+  // ✅ Optionnel : empêche Next d'optimiser les images (utile en hébergement custom)
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
