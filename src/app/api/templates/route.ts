@@ -268,15 +268,35 @@ export async function DELETE(req: NextRequest) {
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
-
 // ============================================================
-// 🔵 GET - Liste des templates (+ fichiers)
+// 🔵 GET - Liste ou un seul template
 // ============================================================
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const domain_id = searchParams.get("domain_id");
+    const id = searchParams.get("id");
 
+    if (id) {
+      // ✅ GET by ID
+      const [templates] = await pool.execute<RowDataPacket[]>(
+        "SELECT * FROM templates WHERE id = ?",
+        [id]
+      );
+
+      if (templates.length === 0)
+        return addCORSHeaders(NextResponse.json({ message: "Template introuvable" }, { status: 404 }));
+
+      const [files] = await pool.execute<RowDataPacket[]>(
+        "SELECT id, name, url, file_type, size_bytes FROM template_files WHERE template_id = ?",
+        [id]
+      );
+
+      const template = { ...templates[0], files };
+      return addCORSHeaders(NextResponse.json({ data: template }));
+    }
+
+    // ✅ Sinon, liste complète ou filtrée
     let query = "SELECT * FROM templates";
     const params: any[] = [];
 
@@ -287,7 +307,6 @@ export async function GET(req: NextRequest) {
 
     const [templates] = await pool.execute<RowDataPacket[]>(query, params);
 
-    // Attacher les fichiers à chaque template
     for (const t of templates) {
       const [files] = await pool.execute<RowDataPacket[]>(
         "SELECT id, name, url, file_type, size_bytes FROM template_files WHERE template_id = ?",
