@@ -1,33 +1,58 @@
-// app/api/templates/upload/route.ts
-import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+// app/api/uploads/image/route.ts
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// 🧠 Configuration DigitalOcean Spaces
+const s3 = new S3Client({
+    region: process.env.DO_SPACES_REGION ?? "sfo3",
+    endpoint: process.env.DO_SPACES_ENDPOINT ?? "https://sfo3.digitaloceanspaces.com",
+    forcePathStyle: false,
+    credentials: {
+        accessKeyId: process.env.DO_SPACES_KEY!,
+        secretAccessKey: process.env.DO_SPACES_SECRET!,
+    },
+});
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { preview_image, name } = body;
+        const { filename, contentType } = await req.json();
 
-        if (!preview_image || !name) throw new Error("Image ou nom manquant");
+        if (!filename || !contentType) {
+            return NextResponse.json(
+                { error: "Nom de fichier ou type de contenu manquant" },
+                { status: 400 }
+            );
+        }
 
-        const matches = preview_image.match(/^data:image\/png;base64,(.+)$/);
-        if (!matches) throw new Error("Image invalide");
+        // 🖼️ Stockage dans le dossier "uploads/images/"
+        const key = `uploads/images/${Date.now()}-${filename}`;
 
-        const base64Data = matches[1];
-        const buffer = Buffer.from(base64Data, "base64");
+        const command = new PutObjectCommand({
+            Bucket: process.env.DO_SPACES_BUCKET!,
+            Key: key,
+            ContentType: contentType,
+            ACL: "public-read", // 📂 accès public
+        });
 
-        const dir = path.join(process.cwd(), "public", "uploads");
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        // ⏳ URL signée (valable 5 minutes)
+        const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
-        const fileName = `${name.replace(/\s/g, "_")}_${Date.now()}.png`;
-        const filePath = path.join(dir, fileName);
+        // 🌍 URL publique accessible immédiatement après l’upload
+        const fileUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
+            "https://",
+            `https://${process.env.DO_SPACES_BUCKET!}.`
+        )}/${key}`;
 
-        fs.writeFileSync(filePath, buffer);
-
-        const url = `/uploads/${fileName}`; // URL publique
-
-        return NextResponse.json({ url }, { status: 200 });
-    } catch (err: any) {
-        return NextResponse.json({ message: err.message }, { status: 400 });
+        return NextResponse.json({ uploadUrl, fileUrl });
+    } catch (error) {
+        console.error("❌ Erreur génération presigned URL:", error);
+        return NextResponse.json(
+            { error: "Erreur lors de la création de l'URL pré-signée" },
+            { status: 500 }
+        );
     }
 }
