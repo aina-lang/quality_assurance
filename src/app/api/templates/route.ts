@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/app/lib/db";
-import { Template } from "@/app/lib/types";
 import { verifyToken } from "@/lib/utils";
 import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
 // ============================================================
 // ⚙️ Configuration DigitalOcean Spaces
@@ -34,30 +37,31 @@ export async function OPTIONS() {
 }
 
 // ============================================================
-// 🟢 POST - Ajouter un template
+// 🟢 POST - Créer un template + fichiers
 // ============================================================
 export async function POST(req: NextRequest) {
   try {
     verifyToken(req);
 
-    const body = (await req.json()) as Omit<Template, "id" | "created_at" | "updated_at"> & {
-      preview_image_base64?: string;
-    };
+    const formData = await req.formData();
+    const name = formData.get("name")?.toString() || "";
+    const domain_id = formData.get("domain_id")?.toString() || "";
+    const content = formData.get("content")?.toString() || "{}";
+    const previewBase64 = formData.get("preview_image_base64")?.toString() || "";
+    const attachmentsMeta = JSON.parse(formData.get("attachments_meta")?.toString() || "[]");
+    const attachments = formData.getAll("attachments[]") as File[];
 
-    if (!body.name || !body.domain_id) throw new Error("Champs requis : name et domain_id");
+    if (!name || !domain_id) throw new Error("Champs requis : name et domain_id");
 
     let previewImageUrl: string | null = null;
 
-    // 📸 Upload image sur DigitalOcean Spaces
-    if (body.preview_image_base64) {
-      const matches = body.preview_image_base64.match(/^data:(.+);base64,(.+)$/);
-      if (!matches) throw new Error("Format image invalide");
-
-      const contentType = matches[1];
-      const base64Data = matches[2];
-      const buffer = Buffer.from(base64Data, "base64");
-
-      const ext = contentType.split("/")[1];
+    // Upload preview image
+    if (previewBase64) {
+      const match = previewBase64.match(/^data:(.+);base64,(.+)$/);
+      if (!match) throw new Error("Format image invalide");
+      const [_, mime, b64] = match;
+      const ext = mime.split("/")[1];
+      const buffer = Buffer.from(b64, "base64");
       const key = `uploads/templates/${Date.now()}.${ext}`;
 
       await s3.send(
@@ -65,7 +69,7 @@ export async function POST(req: NextRequest) {
           Bucket: process.env.DO_SPACES_BUCKET!,
           Key: key,
           Body: buffer,
-          ContentType: contentType,
+          ContentType: mime,
           ACL: "public-read",
         })
       );
@@ -76,50 +80,91 @@ export async function POST(req: NextRequest) {
       )}/${key}`;
     }
 
-    const [result] = await pool.execute<ResultSetHeader>(
+    // Sauvegarde template
+    const [res] = await pool.execute<ResultSetHeader>(
       "INSERT INTO templates (domain_id, name, content, preview_image) VALUES (?, ?, ?, ?)",
-      [body.domain_id, body.name, JSON.stringify(body.content || {}), previewImageUrl]
+      [domain_id, name, content, previewImageUrl]
     );
+    const templateId = res.insertId;
+    if (!templateId) throw new Error("Erreur lors de la création du template");
 
-    const insertId = result.insertId;
-    if (!insertId) throw new Error("Erreur lors de la création du template");
+    // Upload et enregistrer les fichiers attachés
+    for (const [i, file] of attachments.entries()) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const key = `uploads/templates/files/${Date.now()}_${file.name}`;
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.DO_SPACES_BUCKET!,
+          Key: key,
+          Body: buffer,
+          ContentType: file.type || "application/octet-stream",
+          ACL: "public-read",
+        })
+      );
+      const fileUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
+        "https://",
+        `https://${process.env.DO_SPACES_BUCKET!}.`
+      )}/${key}`;
+
+      await pool.execute(
+        "INSERT INTO template_files (template_id, name, url, file_type, size_bytes) VALUES (?, ?, ?, ?, ?)",
+        [templateId, file.name, fileUrl, file.type, file.size]
+      );
+    }
 
     const [newTemplate] = await pool.execute<RowDataPacket[]>(
       "SELECT * FROM templates WHERE id = ?",
-      [insertId]
+      [templateId]
     );
 
-    return addCORSHeaders(NextResponse.json({ data: newTemplate[0] as Template }, { status: 201 }));
-  } catch (error) {
-    console.error("❌ Erreur POST template:", error);
     return addCORSHeaders(
-      NextResponse.json({ message: (error as Error).message }, { status: 400 })
+      NextResponse.json({ data: newTemplate[0], message: "Template créé avec succès" }, { status: 201 })
     );
+  } catch (error) {
+    console.error("❌ POST erreur:", error);
+    return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
 
 // ============================================================
-// 🟡 PUT - Mettre à jour un template
+// 🟡 PUT - Mise à jour d’un template
 // ============================================================
 export async function PUT(req: NextRequest) {
   try {
     verifyToken(req);
+    const formData = await req.formData();
+    const id = formData.get("id")?.toString();
+    if (!id) throw new Error("ID requis");
 
-    const body = (await req.json()) as Template & { preview_image_base64?: string };
-    if (!body.id) throw new Error("ID requis");
+    const name = formData.get("name")?.toString() ?? null;
+    const domain_id = formData.get("domain_id")?.toString() ?? null;
+    const content = formData.get("content")?.toString() ?? null;
+    const previewBase64 = formData.get("preview_image_base64")?.toString() ?? null;
+    const attachments = formData.getAll("attachments[]") as File[];
 
-    const setClauses: string[] = [];
-    const params: (string | number | unknown)[] = [];
+    const updates: string[] = [];
+    const params: any[] = [];
 
-    // 🖼️ Nouvelle image ?
-    if (body.preview_image_base64) {
-      const matches = body.preview_image_base64.match(/^data:(.+);base64,(.+)$/);
-      if (!matches) throw new Error("Format image invalide");
+    if (name) {
+      updates.push("name = ?");
+      params.push(name);
+    }
+    if (domain_id) {
+      updates.push("domain_id = ?");
+      params.push(domain_id);
+    }
+    if (content) {
+      updates.push("content = ?");
+      params.push(content);
+    }
 
-      const contentType = matches[1];
-      const base64Data = matches[2];
-      const buffer = Buffer.from(base64Data, "base64");
-      const ext = contentType.split("/")[1];
+    if (previewBase64) {
+      const match = previewBase64.match(/^data:(.+);base64,(.+)$/);
+      if (!match) throw new Error("Format image invalide");
+      const [_, mime, b64] = match;
+      const ext = mime.split("/")[1];
+      const buffer = Buffer.from(b64, "base64");
       const key = `uploads/templates/${Date.now()}.${ext}`;
 
       await s3.send(
@@ -127,113 +172,133 @@ export async function PUT(req: NextRequest) {
           Bucket: process.env.DO_SPACES_BUCKET!,
           Key: key,
           Body: buffer,
-          ContentType: contentType,
+          ContentType: mime,
           ACL: "public-read",
         })
       );
 
-      const previewImageUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
+      const url = `${process.env.DO_SPACES_ENDPOINT!.replace(
+        "https://",
+        `https://${process.env.DO_SPACES_BUCKET!}.`
+      )}/${key}`;
+      updates.push("preview_image = ?");
+      params.push(url);
+    }
+
+    params.push(id);
+
+    if (updates.length > 0) {
+      await pool.execute<ResultSetHeader>(
+        `UPDATE templates SET ${updates.join(", ")} WHERE id = ?`,
+        params
+      );
+    }
+
+    // 🔄 Réupload fichiers
+    for (const file of attachments) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const key = `uploads/templates/files/${Date.now()}_${file.name}`;
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.DO_SPACES_BUCKET!,
+          Key: key,
+          Body: buffer,
+          ContentType: file.type || "application/octet-stream",
+          ACL: "public-read",
+        })
+      );
+
+      const fileUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
         "https://",
         `https://${process.env.DO_SPACES_BUCKET!}.`
       )}/${key}`;
 
-      setClauses.push("preview_image = ?");
-      params.push(previewImageUrl);
+      await pool.execute(
+        "INSERT INTO template_files (template_id, name, url, file_type, size_bytes) VALUES (?, ?, ?, ?, ?)",
+        [id, file.name, fileUrl, file.type, file.size]
+      );
     }
-
-    if (body.name !== undefined) {
-      setClauses.push("name = ?");
-      params.push(body.name);
-    }
-    if (body.content !== undefined) {
-      setClauses.push("content = ?");
-      params.push(JSON.stringify(body.content));
-    }
-    if (body.domain_id !== undefined) {
-      setClauses.push("domain_id = ?");
-      params.push(body.domain_id);
-    }
-
-    params.push(body.id);
-
-    const [updateResult] = await pool.execute<ResultSetHeader>(
-      `UPDATE templates SET ${setClauses.join(", ")} WHERE id = ?`,
-      params
-    );
-
-    if (updateResult.affectedRows === 0) throw new Error("Template non trouvé");
 
     const [updated] = await pool.execute<RowDataPacket[]>(
       "SELECT * FROM templates WHERE id = ?",
-      [body.id]
+      [id]
     );
 
-    return addCORSHeaders(NextResponse.json({ data: updated[0] as Template }, { status: 200 }));
+    return addCORSHeaders(NextResponse.json({ data: updated[0], message: "Template mis à jour" }));
   } catch (error) {
-    console.error("❌ Erreur PUT template:", error);
-    return addCORSHeaders(
-      NextResponse.json({ message: (error as Error).message }, { status: 400 })
-    );
+    console.error("❌ PUT erreur:", error);
+    return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
 
 // ============================================================
-// 🔴 DELETE - Supprimer un template + image associée
+// 🔴 DELETE - Supprimer template + fichiers
 // ============================================================
 export async function DELETE(req: NextRequest) {
   try {
-    const decoded = verifyToken(req);
-    if (!decoded) {
-      return addCORSHeaders(NextResponse.json({ message: "Non autorisé" }, { status: 401 }));
-    }
-
+    verifyToken(req);
     const { id } = (await req.json()) as { id: number };
     if (!id) throw new Error("ID requis");
 
-    // 🔍 Récupérer le template avant suppression
-    const [rows] = await pool.execute<RowDataPacket[]>(
-      "SELECT preview_image FROM templates WHERE id = ?",
+    const [files] = await pool.execute<RowDataPacket[]>(
+      "SELECT url FROM template_files WHERE template_id = ?",
       [id]
     );
 
-    if (!rows.length) throw new Error("Template non trouvé");
-
-    const imageUrl = rows[0].preview_image as string | null;
-
-    // 🧹 Supprimer le fichier sur Spaces s’il existe
-    if (imageUrl) {
-      const bucket = process.env.DO_SPACES_BUCKET!;
-      const endpoint = process.env.DO_SPACES_ENDPOINT!;
-      const key = imageUrl.replace(`${endpoint.replace("https://", `https://${bucket}.`)}/`, "");
-
-      try {
-        await s3.send(
-          new DeleteObjectCommand({
-            Bucket: bucket,
-            Key: key,
-          })
-        );
-        console.log(`🗑️ Image supprimée: ${key}`);
-      } catch (err) {
-        console.warn("⚠️ Impossible de supprimer l’image:", err);
-      }
+    // Supprime fichiers S3
+    for (const file of files) {
+      const url = file.url as string;
+      const key = url.replace(
+        `${process.env.DO_SPACES_ENDPOINT!.replace(
+          "https://",
+          `https://${process.env.DO_SPACES_BUCKET!}.`
+        )}/`,
+        ""
+      );
+      await s3.send(new DeleteObjectCommand({ Bucket: process.env.DO_SPACES_BUCKET!, Key: key }));
     }
 
-    // 🗃️ Supprimer le template en DB
-    const [result] = await pool.execute<ResultSetHeader>(
-      "DELETE FROM templates WHERE id = ?",
-      [id]
-    );
+    await pool.execute("DELETE FROM templates WHERE id = ?", [id]);
 
-    if (result.affectedRows === 0) throw new Error("Template non trouvé");
-
-    return addCORSHeaders(
-      NextResponse.json({ message: "Template et image supprimés" }, { status: 200 })
-    );
+    return addCORSHeaders(NextResponse.json({ message: "Template supprimé avec succès" }));
   } catch (error) {
-    console.error("❌ Erreur DELETE template:", error);
-    return addCORSHeaders(
-      NextResponse.json({ message: (error as Error).message }, { status: 400 })
-    );
+    console.error("❌ DELETE erreur:", error);
+    return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
+  }
+}
+
+// ============================================================
+// 🔵 GET - Liste des templates (+ fichiers)
+// ============================================================
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const domain_id = searchParams.get("domain_id");
+
+    let query = "SELECT * FROM templates";
+    const params: any[] = [];
+
+    if (domain_id) {
+      query += " WHERE domain_id = ?";
+      params.push(domain_id);
+    }
+
+    const [templates] = await pool.execute<RowDataPacket[]>(query, params);
+
+    // Attacher les fichiers à chaque template
+    for (const t of templates) {
+      const [files] = await pool.execute<RowDataPacket[]>(
+        "SELECT id, name, url, file_type, size_bytes FROM template_files WHERE template_id = ?",
+        [t.id]
+      );
+      t.files = files;
+    }
+
+    return addCORSHeaders(NextResponse.json({ data: templates }));
+  } catch (error) {
+    console.error("❌ GET erreur:", error);
+    return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
