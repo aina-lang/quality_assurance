@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/app/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
 import { Participant } from '@/app/lib/types';
+import {
+  buildSearchClause,
+  getFilterValues,
+  getPaginationParams,
+  getSortParams,
+  parseFilters,
+} from '@/app/lib/api-helpers';
 
 const addCORSHeaders = (response: NextResponse) => {
   response.headers.set('Access-Control-Allow-Origin', '*');
@@ -13,32 +20,87 @@ const addCORSHeaders = (response: NextResponse) => {
 // GET: List all participants with filters
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const domainId = searchParams.get('domain_id');
-    const search = searchParams.get('search');
+    const searchParams = req.nextUrl.searchParams;
+    const { page, pageSize, offset, search } = getPaginationParams(searchParams);
+    const filters = getFilterValues(searchParams, ['domain_id', 'client_id']);
+    const { clauses: advancedFilterClauses, params: advancedFilterParams } = parseFilters(
+      searchParams,
+      {
+        domain_id: { column: 'p.domain_id', operator: 'eq' },
+        client_id: { column: 'd.client_id', operator: 'eq' },
+        name: { column: 'p.name', operator: 'like' },
+        email: { column: 'p.email', operator: 'like' },
+        poste: { column: 'p.poste', operator: 'like' },
+      }
+    );
 
-    let query = 'SELECT p.*, d.name as domain_name, d.client_id FROM participants p LEFT JOIN domains d ON p.domain_id = d.id WHERE 1=1';
+    const whereClauses: string[] = [];
     const params: (string | number)[] = [];
 
-    if (domainId) {
-      query += ' AND p.domain_id = ?';
-      params.push(Number(domainId));
+    if (filters.domain_id) {
+      whereClauses.push('p.domain_id = ?');
+      params.push(Number(filters.domain_id));
+    }
+
+    if (filters.client_id) {
+      whereClauses.push('d.client_id = ?');
+      params.push(Number(filters.client_id));
     }
 
     if (search) {
-      query += ' AND (p.name LIKE ? OR p.email LIKE ? OR p.poste LIKE ?)';
-      const searchPattern = `%${search}%`;
-      params.push(searchPattern, searchPattern, searchPattern);
+      const { clause, params: searchParamsArray } = buildSearchClause(
+        ['p.name', 'p.email', 'p.poste'],
+        search
+      );
+      if (clause) {
+        whereClauses.push(clause);
+        params.push(...searchParamsArray);
+      }
     }
 
-    query += ' ORDER BY p.created_at DESC';
+    if (advancedFilterClauses.length) {
+      whereClauses.push(...advancedFilterClauses);
+      params.push(...advancedFilterParams);
+    }
 
-    const [participants] = await pool.execute<RowDataPacket[]>(query, params);
-    
-    const response = NextResponse.json({ 
-      success: true, 
+    const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+    const baseQuery = 'FROM participants p LEFT JOIN domains d ON p.domain_id = d.id';
+
+    const { orderBy } = getSortParams(searchParams, {
+      allowedFields: {
+        name: 'p.name',
+        email: 'p.email',
+        domain_id: 'p.domain_id',
+        client_id: 'd.client_id',
+        domain_name: 'd.name',
+        created_at: 'p.created_at',
+      },
+      defaultField: 'p.created_at',
+      defaultOrder: 'desc',
+    });
+
+    const dataQuery = `SELECT p.*, d.name as domain_name, d.client_id ${baseQuery} ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
+    const countQuery = `SELECT COUNT(*) as total ${baseQuery} ${where}`;
+
+    const [participants] = await pool.execute<RowDataPacket[]>(dataQuery, [
+      ...params,
+      pageSize,
+      offset,
+    ]);
+    const [countRows] = await pool.execute<RowDataPacket[]>(countQuery, params);
+    const total =
+      Number((countRows[0] as RowDataPacket & { total?: number })?.total ?? 0);
+
+    const response = NextResponse.json({
+      success: true,
       data: participants,
-      total: participants.length 
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        hasNextPage: page * pageSize < total,
+      },
     }, { status: 200 });
     return addCORSHeaders(response);
   } catch (error) {

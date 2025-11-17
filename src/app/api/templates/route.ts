@@ -3,6 +3,13 @@ import { pool } from "@/app/lib/db";
 import { verifyToken } from "@/lib/utils";
 import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import {
+  buildSearchClause,
+  getFilterValues,
+  getPaginationParams,
+  getSortParams,
+  parseFilters,
+} from "@/app/lib/api-helpers";
+import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
@@ -273,7 +280,7 @@ export async function DELETE(req: NextRequest) {
 // ============================================================
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const searchParams = req.nextUrl.searchParams;
     const domain_id = searchParams.get("domain_id");
     const id = searchParams.get("id");
 
@@ -296,16 +303,62 @@ export async function GET(req: NextRequest) {
       return addCORSHeaders(NextResponse.json({ data: template }));
     }
 
-    // ✅ Otherwise, full or filtered list
-    let query = "SELECT * FROM templates";
-    const params: any[] = [];
+    const { page, pageSize, offset, search } = getPaginationParams(searchParams);
+    const filters = getFilterValues(searchParams, ["domain_id"]);
+    const { clauses: advancedFilterClauses, params: advancedFilterParams } = parseFilters(
+      searchParams,
+      {
+        domain_id: { column: "domain_id", operator: "eq" },
+        name: { column: "name", operator: "like" },
+      }
+    );
 
-    if (domain_id) {
-      query += " WHERE domain_id = ?";
-      params.push(domain_id);
+    const whereClauses: string[] = [];
+    const params: (string | number)[] = [];
+
+    if (domain_id || filters.domain_id) {
+      const value = Number(domain_id ?? filters.domain_id);
+      if (!Number.isNaN(value)) {
+        whereClauses.push("domain_id = ?");
+        params.push(value);
+      }
     }
 
-    const [templates] = await pool.execute<RowDataPacket[]>(query, params);
+    if (search) {
+      const { clause, params: searchParamsArray } = buildSearchClause(["name"], search);
+      if (clause) {
+        whereClauses.push(clause);
+        params.push(...searchParamsArray);
+      }
+    }
+
+    if (advancedFilterClauses.length) {
+      whereClauses.push(...advancedFilterClauses);
+      params.push(...advancedFilterParams);
+    }
+
+    const where = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+    const { orderBy } = getSortParams(searchParams, {
+      allowedFields: {
+        name: "name",
+        domain_id: "domain_id",
+        created_at: "created_at",
+      },
+      defaultField: "created_at",
+      defaultOrder: "desc",
+    });
+
+    const dataQuery = `SELECT * FROM templates ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
+    const countQuery = `SELECT COUNT(*) as total FROM templates ${where}`;
+
+    const [templates] = await pool.execute<RowDataPacket[]>(dataQuery, [
+      ...params,
+      pageSize,
+      offset,
+    ]);
+    const [countRows] = await pool.execute<RowDataPacket[]>(countQuery, params);
+    const total =
+      Number((countRows[0] as RowDataPacket & { total?: number })?.total ?? 0);
 
     for (const t of templates) {
       const [files] = await pool.execute<RowDataPacket[]>(
@@ -315,7 +368,19 @@ export async function GET(req: NextRequest) {
       t.files = files;
     }
 
-    return addCORSHeaders(NextResponse.json({ data: templates }));
+    return addCORSHeaders(
+      NextResponse.json({
+        success: true,
+        data: templates,
+        meta: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+          hasNextPage: page * pageSize < total,
+        },
+      })
+    );
   } catch (error) {
     console.error("❌ GET error:", error);
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));

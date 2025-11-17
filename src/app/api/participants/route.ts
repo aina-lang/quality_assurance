@@ -3,6 +3,13 @@ import { pool } from '@/app/lib/db';
 import { Participant } from '@/app/lib/types';
 import { verifyToken } from '@/lib/utils';
 import { RowDataPacket } from 'mysql2/promise';
+import {
+  buildSearchClause,
+  getFilterValues,
+  getPaginationParams,
+  getSortParams,
+  parseFilters,
+} from '@/app/lib/api-helpers';
 
 
 // Utility function to add CORS headers to a response
@@ -30,8 +37,83 @@ export async function GET(req: NextRequest) {
       const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       return addCORSHeaders(res);
     }
-    const [participants] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants ORDER BY created_at DESC');
-    const response = NextResponse.json({ data: participants }, { status: 200 });
+
+    const searchParams = req.nextUrl.searchParams;
+    const { page, pageSize, offset, search } = getPaginationParams(searchParams);
+    const filters = getFilterValues(searchParams, ['domain_id']);
+    const { clauses: advancedFilterClauses, params: advancedFilterParams } = parseFilters(
+      searchParams,
+      {
+        domain_id: { column: 'domain_id', operator: 'eq' },
+        name: { column: 'name', operator: 'like' },
+        email: { column: 'email', operator: 'like' },
+        poste: { column: 'poste', operator: 'like' },
+      }
+    );
+
+    const whereClauses: string[] = [];
+    const params: (string | number)[] = [];
+
+    if (filters.domain_id) {
+      whereClauses.push('domain_id = ?');
+      params.push(Number(filters.domain_id));
+    }
+
+    if (search) {
+      const { clause, params: searchParamsArray } = buildSearchClause(
+        ['name', 'email', 'poste'],
+        search
+      );
+      if (clause) {
+        whereClauses.push(clause);
+        params.push(...searchParamsArray);
+      }
+    }
+
+    if (advancedFilterClauses.length) {
+      whereClauses.push(...advancedFilterClauses);
+      params.push(...advancedFilterParams);
+    }
+
+    const where = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : '';
+    const { orderBy } = getSortParams(searchParams, {
+      allowedFields: {
+        name: 'name',
+        email: 'email',
+        domain_id: 'domain_id',
+        poste: 'poste',
+        created_at: 'created_at',
+      },
+      defaultField: 'created_at',
+      defaultOrder: 'desc',
+    });
+
+    const dataQuery = `SELECT * FROM participants ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
+    const countQuery = `SELECT COUNT(*) as total FROM participants ${where}`;
+
+    const [participants] = await pool.execute<RowDataPacket[]>(dataQuery, [
+      ...params,
+      pageSize,
+      offset,
+    ]);
+    const [countRows] = await pool.execute<RowDataPacket[]>(countQuery, params);
+    const total =
+      Number((countRows[0] as RowDataPacket & { total?: number })?.total ?? 0);
+
+    const response = NextResponse.json(
+      {
+        success: true,
+        data: participants,
+        meta: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+          hasNextPage: page * pageSize < total,
+        },
+      },
+      { status: 200 }
+    );
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
