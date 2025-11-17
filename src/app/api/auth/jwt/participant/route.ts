@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, message: "Email et mot de passe requis" },
+        { success: false, message: "Email and password required" },
         {
           status: 400,
           headers: {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Chercher l'utilisateur participant
+    // Find participant user
     const [rows]: any = await pool.query(
       "SELECT * FROM participants WHERE email = ?",
       [email]
@@ -32,21 +32,21 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Utilisateur non trouvé" },
+        { success: false, message: "User not found" },
         { status: 404, headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
 
-    // Vérifier le mot de passe
+    // Verify password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
       return NextResponse.json(
-        { success: false, message: "Mot de passe incorrect" },
+        { success: false, message: "Incorrect password" },
         { status: 401, headers: { "Access-Control-Allow-Origin": "*" } }
       );
     }
 
-    // Générer le token JWT avec le rôle participant
+    // Generate JWT token with participant role
     const token = jwt.sign(
       { id: user.id, email: user.email, role: "participant" },
       process.env.AUTH_SECRET as string,
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: "Connexion réussie",
+        message: "Login successful",
         data: {
           token,
           user: { ...user, role: "participant" },
@@ -72,9 +72,9 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (err) {
-    console.error("Erreur serveur:", err);
+    console.error("Server error:", err);
     return NextResponse.json(
-      { success: false, message: "Erreur interne du serveur" },
+      { success: false, message: "Internal server error" },
       {
         status: 500,
         headers: {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Gérer les OPTIONS pour le préflight CORS
+// Handle OPTIONS for CORS preflight
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,

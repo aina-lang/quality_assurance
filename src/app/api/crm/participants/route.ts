@@ -10,7 +10,7 @@ const addCORSHeaders = (response: NextResponse) => {
   return response;
 };
 
-// GET : Lister tous les participants avec filtres
+// GET: List all participants with filters
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur GET participants CRM:', err);
+    console.error('Error GET participants CRM:', err);
     const response = NextResponse.json({ 
       success: false, 
       message: err.message 
@@ -52,22 +52,22 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST : Créer un participant
+// POST: Create a participant
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as Omit<Participant, 'id' | 'created_at' | 'updated_at'>;
     
     if (!body.name || !body.email || !body.domain_id) {
-      throw new Error('Champs requis : name, email, domain_id');
+      throw new Error('Required fields: name, email, domain_id');
     }
 
-    // Vérifier si email existe déjà
+    // Check if email already exists
     const [existing] = await pool.execute<RowDataPacket[]>(
       'SELECT id FROM participants WHERE email = ?',
       [body.email]
     );
     if (existing.length > 0) {
-      throw new Error('Un participant avec cet email existe déjà');
+      throw new Error('A participant with this email already exists');
     }
 
     const [result] = await pool.execute(
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur POST participant CRM:', err);
+    console.error('Error POST participant CRM:', err);
     const response = NextResponse.json({ 
       success: false, 
       message: err.message 

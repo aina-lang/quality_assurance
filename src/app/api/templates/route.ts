@@ -37,7 +37,7 @@ export async function OPTIONS() {
 }
 
 // ============================================================
-// 🟢 POST - Créer un template + fichiers
+// 🟢 POST - Create template + files
 // ============================================================
 export async function POST(req: NextRequest) {
   try {
@@ -51,14 +51,14 @@ export async function POST(req: NextRequest) {
     const attachmentsMeta = JSON.parse(formData.get("attachments_meta")?.toString() || "[]");
     const attachments = formData.getAll("attachments[]") as File[];
 
-    if (!name || !domain_id) throw new Error("Champs requis : name et domain_id");
+    if (!name || !domain_id) throw new Error("Required fields: name and domain_id");
 
     let previewImageUrl: string | null = null;
 
     // Upload preview image
     if (previewBase64) {
       const match = previewBase64.match(/^data:(.+);base64,(.+)$/);
-      if (!match) throw new Error("Format image invalide");
+      if (!match) throw new Error("Invalid image format");
       const [_, mime, b64] = match;
       const ext = mime.split("/")[1];
       const buffer = Buffer.from(b64, "base64");
@@ -80,15 +80,15 @@ export async function POST(req: NextRequest) {
       )}/${key}`;
     }
 
-    // Sauvegarde template
+    // Save template
     const [res] = await pool.execute<ResultSetHeader>(
       "INSERT INTO templates (domain_id, name, content, preview_image) VALUES (?, ?, ?, ?)",
       [domain_id, name, content, previewImageUrl]
     );
     const templateId = res.insertId;
-    if (!templateId) throw new Error("Erreur lors de la création du template");
+    if (!templateId) throw new Error("Error creating template");
 
-    // Upload et enregistrer les fichiers attachés
+    // Upload and save attached files
     for (const [i, file] of attachments.entries()) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -119,23 +119,23 @@ export async function POST(req: NextRequest) {
     );
 
     return addCORSHeaders(
-      NextResponse.json({ data: newTemplate[0], message: "Template créé avec succès" }, { status: 201 })
+      NextResponse.json({ data: newTemplate[0], message: "Template created successfully" }, { status: 201 })
     );
   } catch (error) {
-    console.error("❌ POST erreur:", error);
+    console.error("❌ POST error:", error);
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
 
 // ============================================================
-// 🟡 PUT - Mise à jour d’un template
+// 🟡 PUT - Update a template
 // ============================================================
 export async function PUT(req: NextRequest) {
   try {
     verifyToken(req);
     const formData = await req.formData();
     const id = formData.get("id")?.toString();
-    if (!id) throw new Error("ID requis");
+    if (!id) throw new Error("ID required");
 
     const name = formData.get("name")?.toString() ?? null;
     const domain_id = formData.get("domain_id")?.toString() ?? null;
@@ -161,7 +161,7 @@ export async function PUT(req: NextRequest) {
 
     if (previewBase64) {
       const match = previewBase64.match(/^data:(.+);base64,(.+)$/);
-      if (!match) throw new Error("Format image invalide");
+      if (!match) throw new Error("Invalid image format");
       const [_, mime, b64] = match;
       const ext = mime.split("/")[1];
       const buffer = Buffer.from(b64, "base64");
@@ -190,11 +190,11 @@ export async function PUT(req: NextRequest) {
     if (updates.length > 0) {
       await pool.execute<ResultSetHeader>(
         `UPDATE templates SET ${updates.join(", ")} WHERE id = ?`,
-        params
+      params
       );
     }
 
-    // 🔄 Réupload fichiers
+    // 🔄 Re-upload files
     for (const file of attachments) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
@@ -226,28 +226,28 @@ export async function PUT(req: NextRequest) {
       [id]
     );
 
-    return addCORSHeaders(NextResponse.json({ data: updated[0], message: "Template mis à jour" }));
+    return addCORSHeaders(NextResponse.json({ data: updated[0], message: "Template updated" }));
   } catch (error) {
-    console.error("❌ PUT erreur:", error);
+    console.error("❌ PUT error:", error);
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
 
 // ============================================================
-// 🔴 DELETE - Supprimer template + fichiers
+// 🔴 DELETE - Delete template + files
 // ============================================================
 export async function DELETE(req: NextRequest) {
   try {
     verifyToken(req);
     const { id } = (await req.json()) as { id: number };
-    if (!id) throw new Error("ID requis");
+    if (!id) throw new Error("ID required");
 
     const [files] = await pool.execute<RowDataPacket[]>(
       "SELECT url FROM template_files WHERE template_id = ?",
       [id]
     );
 
-    // Supprime fichiers S3
+    // Delete S3 files
     for (const file of files) {
       const url = file.url as string;
       const key = url.replace(
@@ -262,14 +262,14 @@ export async function DELETE(req: NextRequest) {
 
     await pool.execute("DELETE FROM templates WHERE id = ?", [id]);
 
-    return addCORSHeaders(NextResponse.json({ message: "Template supprimé avec succès" }));
+    return addCORSHeaders(NextResponse.json({ message: "Template deleted successfully" }));
   } catch (error) {
-    console.error("❌ DELETE erreur:", error);
+    console.error("❌ DELETE error:", error);
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }
 // ============================================================
-// 🔵 GET - Liste ou un seul template
+// 🔵 GET - List or single template
 // ============================================================
 export async function GET(req: NextRequest) {
   try {
@@ -285,7 +285,7 @@ export async function GET(req: NextRequest) {
       );
 
       if (templates.length === 0)
-        return addCORSHeaders(NextResponse.json({ message: "Template introuvable" }, { status: 404 }));
+        return addCORSHeaders(NextResponse.json({ message: "Template not found" }, { status: 404 }));
 
       const [files] = await pool.execute<RowDataPacket[]>(
         "SELECT id, name, url, file_type, size_bytes FROM template_files WHERE template_id = ?",
@@ -296,7 +296,7 @@ export async function GET(req: NextRequest) {
       return addCORSHeaders(NextResponse.json({ data: template }));
     }
 
-    // ✅ Sinon, liste complète ou filtrée
+    // ✅ Otherwise, full or filtered list
     let query = "SELECT * FROM templates";
     const params: any[] = [];
 
@@ -317,7 +317,7 @@ export async function GET(req: NextRequest) {
 
     return addCORSHeaders(NextResponse.json({ data: templates }));
   } catch (error) {
-    console.error("❌ GET erreur:", error);
+    console.error("❌ GET error:", error);
     return addCORSHeaders(NextResponse.json({ message: (error as Error).message }, { status: 400 }));
   }
 }

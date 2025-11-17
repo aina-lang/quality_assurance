@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/utils';
 import { RowDataPacket } from 'mysql2/promise';
 
 
-// Fonction utilitaire pour ajouter les headers CORS à une réponse
+// Utility function to add CORS headers to a response
 const addCORSHeaders = (response: NextResponse) => {
   response.headers.set('Access-Control-Allow-Origin', '*'); // Ou 'http://localhost:5173' pour prod
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -14,20 +14,20 @@ const addCORSHeaders = (response: NextResponse) => {
   return response;
 };
 
-// Handler OPTIONS pour preflight CORS
+// Handler OPTIONS for CORS preflight
 export async function OPTIONS() {
   const response = new NextResponse(null, { status: 204 });
   return addCORSHeaders(response);
 }
 
-// GET : Lister tous les participants
+// GET: List all participants
 export async function GET(req: NextRequest) {
   try {
     const decoded = verifyToken(req);
     console.log(decoded);
 
     if (!decoded) {
-      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       return addCORSHeaders(res);
     }
     const [participants] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants ORDER BY created_at DESC');
@@ -35,36 +35,36 @@ export async function GET(req: NextRequest) {
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur GET participants:', err);
+    console.error('Error GET participants:', err);
     const response = NextResponse.json({ message: err.message }, { status: 401 });
     return addCORSHeaders(response);
   }
 }
 
-// POST : Créer un participant
+// POST: Create a participant
 export async function POST(req: NextRequest) {
   try {
     const decoded = verifyToken(req);
     console.log(decoded);
 
     if (!decoded) {
-      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       return addCORSHeaders(res);
     }
     const body = await req.json() as Omit<Participant, 'id' | 'created_at' | 'updated_at'>;
     console.log(body);
 
     if (!body.name || !body.email || !body.domain_id) {
-      throw new Error('Champs requis : name, email, domain_id');
+      throw new Error('Required fields: name, email, domain_id');
     }
 
-    // ✅ Vérifier si email existe déjà
+    // ✅ Check if email already exists
     const [existing] = await pool.execute<RowDataPacket[]>(
       'SELECT id FROM participants WHERE email = ?',
       [body.email]
     );
     if (existing.length > 0) {
-      throw new Error('Un participant avec cet email existe déjà');
+      throw new Error('A participant with this email already exists');
     }
 
     const [result] = await pool.execute(
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const insertId = (result as RowDataPacket[] & { insertId?: number })[0]?.insertId;
     if (!insertId) {
-      throw new Error('Erreur lors de la création du participant');
+      throw new Error('Error creating participant');
     }
     
     const [newParticipant] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants WHERE id = ?', [insertId]);
@@ -84,26 +84,26 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur POST participant:', err);
+    console.error('Error POST participant:', err);
     const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }
 }
 
 
-// PUT : Mettre à jour un participant
+// PUT: Update a participant
 export async function PUT(req: NextRequest) {
   try {
     const decoded = verifyToken(req);
     console.log(decoded);
 
     if (!decoded) {
-      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       return addCORSHeaders(res);
     }
     const body = await req.json() as Participant;
     if (!body.id || Object.keys(body).filter(k => ['name', 'email', 'domain_id', 'poste'].includes(k)).length === 0) {
-      throw new Error('ID et au moins un champ à mettre à jour requis');
+      throw new Error('ID and at least one field to update required');
     }
     const setClauses: string[] = [];
     const params: (string | number)[] = [];
@@ -117,37 +117,37 @@ export async function PUT(req: NextRequest) {
       `UPDATE participants SET ${setClauses.join(', ')} WHERE id = ?`,
       params
     );
-    if ((updateResult as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant non trouvé');
+    if ((updateResult as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant not found');
     const [updated] = await pool.execute<RowDataPacket[]>('SELECT * FROM participants WHERE id = ?', [body.id]);
     const response = NextResponse.json({ data: updated[0] as Participant }, { status: 200 });
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur PUT participant:', err);
+    console.error('Error PUT participant:', err);
     const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }
 }
 
-// DELETE : Supprimer un participant
+// DELETE: Delete a participant
 export async function DELETE(req: NextRequest) {
   try {
     const decoded = verifyToken(req);
     console.log(decoded);
 
     if (!decoded) {
-      const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+      const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
       return addCORSHeaders(res);
     }
     const { id } = await req.json() as { id: number };
-    if (!id) throw new Error('ID requis');
+    if (!id) throw new Error('ID required');
     const [result] = await pool.execute('DELETE FROM participants WHERE id = ?', [id]);
-    if ((result as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant non trouvé');
-    const response = NextResponse.json({ message: 'Participant supprimé' }, { status: 200 });
+    if ((result as unknown as { affectedRows: number }).affectedRows === 0) throw new Error('Participant not found');
+    const response = NextResponse.json({ message: 'Participant deleted' }, { status: 200 });
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur DELETE participant:', err);
+    console.error('Error DELETE participant:', err);
     const response = NextResponse.json({ message: err.message }, { status: 400 });
     return addCORSHeaders(response);
   }

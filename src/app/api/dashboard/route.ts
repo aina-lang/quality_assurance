@@ -4,14 +4,14 @@ import { pool } from '@/app/lib/db';
 import { verifyToken } from '@/lib/utils';
 
 const addCORSHeaders = (response: NextResponse) => {
-    response.headers.set('Access-Control-Allow-Origin', '*'); // Ou limiter à l’URL de ton app Electron
+    response.headers.set('Access-Control-Allow-Origin', '*'); // Or limit to your Electron app URL
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     response.headers.set('Access-Control-Max-Age', '86400');
     return response;
 };
 
-// --- Gestion du prévol (OPTIONS)
+// --- Preflight handling (OPTIONS)
 export async function OPTIONS() {
     const response = new NextResponse(null, { status: 204 });
     return addCORSHeaders(response);
@@ -19,7 +19,7 @@ export async function OPTIONS() {
 
 
 
-// --- GET sécurisé ---
+// --- Secure GET ---
 export async function GET(req: NextRequest) {
     try {
     
@@ -27,13 +27,13 @@ export async function GET(req: NextRequest) {
         console.log(decoded);
         
         if (!decoded) {
-            const res = NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+            const res = NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
             return addCORSHeaders(res);
         }
 
         const userId = decoded.id;
 
-        // --- Récupération des données SQL ---
+        // --- SQL data retrieval ---
         const [participants]: any = await pool.execute('SELECT * FROM participants');
 
         let templatesCount = 14;
@@ -77,14 +77,14 @@ export async function GET(req: NextRequest) {
                 case 3:
                     return 'VIP';
                 default:
-                    return 'Gratuit';
+                    return 'Free';
             }
         };
 
         const dashboardData = {
-            participants: { count: participants.length, description: 'Participants actifs.' },
-            templates: { count: templatesCount, description: 'Modèles personnalisés.' },
-            domains: { count: domainsCount, description: 'Domaines enregistrés.' },
+            participants: { count: participants.length, description: 'Active participants.' },
+            templates: { count: templatesCount, description: 'Custom templates.' },
+            domains: { count: domainsCount, description: 'Registered domains.' },
             userAccount: {
                 type: mapAccountTypeIdToType(subscription.account_type_id),
                 subscriptionStart: subscription.start_date,
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
         const res = NextResponse.json({ data: dashboardData }, { status: 200 });
         return addCORSHeaders(res);
     } catch (error: any) {
-        console.error('Erreur API:', error);
+        console.error('API Error:', error);
         const res = NextResponse.json({ message: error.message }, { status: 500 });
         return addCORSHeaders(res);
     }

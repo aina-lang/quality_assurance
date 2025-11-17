@@ -33,7 +33,7 @@ export async function GET(req: Request) {
             Key: fileKey,
         });
 
-        // ⏳ URL de téléchargement valable 5 minutes
+        // ⏳ Download URL valid for 5 minutes
         const downloadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
         return NextResponse.json({ downloadUrl });

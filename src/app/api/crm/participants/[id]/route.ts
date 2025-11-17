@@ -10,7 +10,7 @@ const addCORSHeaders = (response: NextResponse) => {
   return response;
 };
 
-// PUT : Mettre à jour un participant
+// PUT: Update a participant
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -40,7 +40,7 @@ export async function PUT(
     }
     
     if (setClauses.length === 0) {
-      throw new Error('Aucun champ à mettre à jour');
+      throw new Error('No fields to update');
     }
     
     params_list.push(id);
@@ -51,7 +51,7 @@ export async function PUT(
     );
     
     if ((result as unknown as { affectedRows: number }).affectedRows === 0) {
-      throw new Error('Participant non trouvé');
+      throw new Error('Participant not found');
     }
     
     const [updated] = await pool.execute<RowDataPacket[]>(
@@ -66,7 +66,7 @@ export async function PUT(
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur PUT participant CRM:', err);
+    console.error('Error PUT participant CRM:', err);
     const response = NextResponse.json({ 
       success: false, 
       message: err.message 
@@ -75,7 +75,7 @@ export async function PUT(
   }
 }
 
-// DELETE : Supprimer un participant
+// DELETE: Delete a participant
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -89,17 +89,17 @@ export async function DELETE(
     );
     
     if ((result as unknown as { affectedRows: number }).affectedRows === 0) {
-      throw new Error('Participant non trouvé');
+      throw new Error('Participant not found');
     }
     
     const response = NextResponse.json({ 
       success: true, 
-      message: 'Participant supprimé avec succès' 
+      message: 'Participant deleted successfully' 
     }, { status: 200 });
     return addCORSHeaders(response);
   } catch (error) {
     const err = error as Error;
-    console.error('Erreur DELETE participant CRM:', err);
+    console.error('Error DELETE participant CRM:', err);
     const response = NextResponse.json({ 
       success: false, 
       message: err.message 

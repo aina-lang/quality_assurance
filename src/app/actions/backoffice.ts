@@ -18,23 +18,23 @@ import {
 
 import bcrypt from "bcryptjs";
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
-// Vérification de la session admin
+// Admin session verification
 async function checkAdminSession(): Promise<void> {
   const session = await getServerSession();
   if (!session || !session.user || session.user.email !== process.env.AUTH_SECRET) {
-    throw new Error("Non autorisé");
+    throw new Error("Unauthorized");
   }
 }
 
-// CRUD pour ADMINS
+// CRUD for ADMINS
 export async function getAdmins(): Promise<Admin[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT id, email FROM admins");
     return rows as Admin[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des administrateurs:", error);
-    throw new Error("Impossible de récupérer les administrateurs.");
+    console.error("Error retrieving administrators:", error);
+    throw new Error("Unable to retrieve administrators.");
   }
 }
 
@@ -47,8 +47,8 @@ export async function createAdmin(formData: FormData): Promise<{ id: number }> {
     const [result] = await pool.query("INSERT INTO admins (email, password) VALUES (?, ?)", [email, hashedPassword]);
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création de l'administrateur:", error);
-    throw new Error("Impossible de créer l'administrateur.");
+    console.error("Error creating administrator:", error);
+    throw new Error("Unable to create administrator.");
   }
 }
 
@@ -58,8 +58,8 @@ export async function getAdmin(id: number): Promise<Admin | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT id, email FROM admins WHERE id = ?", [id]);
     return rows[0] as Admin | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération de l'administrateur:", error);
-    throw new Error("Impossible de récupérer l'administrateur.");
+    console.error("Error retrieving administrator:", error);
+    throw new Error("Unable to retrieve administrator.");
   }
 }
 
@@ -78,8 +78,8 @@ export async function updateAdmin(id: number, formData: FormData): Promise<{ suc
     await pool.query(query, values);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'administrateur:", error);
-    throw new Error("Impossible de mettre à jour l'administrateur.");
+    console.error("Error updating administrator:", error);
+    throw new Error("Unable to update administrator.");
   }
 }
 
@@ -89,12 +89,12 @@ export async function deleteAdmin(id: number): Promise<{ success: boolean }> {
     await pool.query("DELETE FROM admins WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'administrateur:", error);
-    throw new Error("Impossible de supprimer l'administrateur.");
+    console.error("Error deleting administrator:", error);
+    throw new Error("Unable to delete administrator.");
   }
 }
 
-// CRUD pour CLIENTS
+// CRUD for CLIENTS
 export async function getClients(): Promise<Client[]> {
   //  await checkAdminSession();
   try {
@@ -103,8 +103,8 @@ export async function getClients(): Promise<Client[]> {
     );
     return rows as Client[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des clients:", error);
-    throw new Error("Impossible de récupérer les clients.");
+    console.error("Error retrieving clients:", error);
+    throw new Error("Unable to retrieve clients.");
   }
 }
 
@@ -125,8 +125,8 @@ export async function createClient(formData: FormData): Promise<{ id: number }> 
     );
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du client:", error);
-    throw new Error("Impossible de créer le client.");
+    console.error("Error creating client:", error);
+    throw new Error("Unable to create client.");
   }
 }
 
@@ -136,8 +136,8 @@ export async function getClient(id: number): Promise<Client | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM clients WHERE id = ?", [id]);
     return rows[0] as Client | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du client:", error);
-    throw new Error("Impossible de récupérer le client.");
+    console.error("Error retrieving client:", error);
+    throw new Error("Unable to retrieve client.");
   }
 }
 
@@ -161,8 +161,8 @@ export async function updateClient(id: number, formData: FormData): Promise<{ su
     await pool.query(query, values);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du client:", error);
-    throw new Error("Impossible de mettre à jour le client.");
+    console.error("Error updating client:", error);
+    throw new Error("Unable to update client.");
   }
 }
 
@@ -172,20 +172,20 @@ export async function deleteClient(id: number): Promise<{ success: boolean }> {
     await pool.query("DELETE FROM clients WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du client:", error);
-    throw new Error("Impossible de supprimer le client.");
+    console.error("Error deleting client:", error);
+    throw new Error("Unable to delete client.");
   }
 }
 
-// CRUD pour DOMAINES
+// CRUD for DOMAINS
 export async function getDomaines(): Promise<Domaine[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaines");
     return rows as Domaine[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des domaines:", error);
-    throw new Error("Impossible de récupérer les domaines.");
+    console.error("Error retrieving domains:", error);
+    throw new Error("Unable to retrieve domains.");
   }
 }
 
@@ -197,8 +197,8 @@ export async function createDomaine(formData: FormData): Promise<{ id: number }>
     const [result] = await pool.query("INSERT INTO domaines (nom, client_id) VALUES (?, ?)", [nom, parseInt(client_id)]);
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du domaine:", error);
-    throw new Error("Impossible de créer le domaine.");
+    console.error("Error creating domain:", error);
+    throw new Error("Unable to create domain.");
   }
 }
 
@@ -208,8 +208,8 @@ export async function getDomaine(id: number): Promise<Domaine | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaines WHERE id = ?", [id]);
     return rows[0] as Domaine | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du domaine:", error);
-    throw new Error("Impossible de récupérer le domaine.");
+    console.error("Error retrieving domain:", error);
+    throw new Error("Unable to retrieve domain.");
   }
 }
 
@@ -221,8 +221,8 @@ export async function updateDomaine(id: number, formData: FormData): Promise<{ s
     await pool.query("UPDATE domaines SET nom = ?, client_id = ? WHERE id = ?", [nom, parseInt(client_id), id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du domaine:", error);
-    throw new Error("Impossible de mettre à jour le domaine.");
+    console.error("Error updating domain:", error);
+    throw new Error("Unable to update domain.");
   }
 }
 
@@ -232,20 +232,20 @@ export async function deleteDomaine(id: number): Promise<{ success: boolean }> {
     await pool.query("DELETE FROM domaines WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du domaine:", error);
-    throw new Error("Impossible de supprimer le domaine.");
+    console.error("Error deleting domain:", error);
+    throw new Error("Unable to delete domain.");
   }
 }
 
-// CRUD pour FICHIERS
+// CRUD for FILES
 export async function getFichiers(): Promise<Fichier[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM fichiers");
     return rows as Fichier[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des fichiers:", error);
-    throw new Error("Impossible de récupérer les fichiers.");
+    console.error("Error retrieving files:", error);
+    throw new Error("Unable to retrieve files.");
   }
 }
 
@@ -258,8 +258,8 @@ export async function createFichier(formData: FormData): Promise<{ id: number }>
     const [result] = await pool.query("INSERT INTO fichiers (nom, chemin, template_id) VALUES (?, ?, ?)", [nom, chemin, parseInt(template_id)]);
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du fichier:", error);
-    throw new Error("Impossible de créer le fichier.");
+    console.error("Error creating file:", error);
+    throw new Error("Unable to create file.");
   }
 }
 
@@ -269,8 +269,8 @@ export async function getFichier(id: number): Promise<Fichier | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM fichiers WHERE id = ?", [id]);
     return rows[0] as Fichier | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du fichier:", error);
-    throw new Error("Impossible de récupérer le fichier.");
+    console.error("Error retrieving file:", error);
+    throw new Error("Unable to retrieve file.");
   }
 }
 
@@ -283,8 +283,8 @@ export async function updateFichier(id: number, formData: FormData): Promise<{ s
     await pool.query("UPDATE fichiers SET nom = ?, chemin = ?, template_id = ? WHERE id = ?", [nom, chemin, parseInt(template_id), id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du fichier:", error);
-    throw new Error("Impossible de mettre à jour le fichier.");
+    console.error("Error updating file:", error);
+    throw new Error("Unable to update file.");
   }
 }
 
@@ -294,20 +294,20 @@ export async function deleteFichier(id: number): Promise<{ success: boolean }> {
     await pool.query("DELETE FROM fichiers WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du fichier:", error);
-    throw new Error("Impossible de supprimer le fichier.");
+    console.error("Error deleting file:", error);
+    throw new Error("Unable to delete file.");
   }
 }
 
-// CRUD pour PAIEMENTS
+// CRUD for PAYMENTS
 export async function getPaiements(): Promise<Paiement[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM paiements");
     return rows as Paiement[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des paiements:", error);
-    throw new Error("Impossible de récupérer les paiements.");
+    console.error("Error retrieving payments:", error);
+    throw new Error("Unable to retrieve payments.");
   }
 }
 
@@ -325,8 +325,8 @@ export async function createPaiement(formData: FormData): Promise<{ id: number }
     );
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du paiement:", error);
-    throw new Error("Impossible de créer le paiement.");
+    console.error("Error creating payment:", error);
+    throw new Error("Unable to create payment.");
   }
 }
 
@@ -336,8 +336,8 @@ export async function getPaiement(id: number): Promise<Paiement | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM paiements WHERE id = ?", [id]);
     return rows[0] as Paiement | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du paiement:", error);
-    throw new Error("Impossible de récupérer le paiement.");
+    console.error("Error retrieving payment:", error);
+    throw new Error("Unable to retrieve payment.");
   }
 }
 
@@ -355,8 +355,8 @@ export async function updatePaiement(id: number, formData: FormData): Promise<{ 
     );
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du paiement:", error);
-    throw new Error("Impossible de mettre à jour le paiement.");
+    console.error("Error updating payment:", error);
+    throw new Error("Unable to update payment.");
   }
 }
 
@@ -366,22 +366,22 @@ export async function deletePaiement(id: number): Promise<{ success: boolean }> 
     await pool.query("DELETE FROM paiements WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du paiement:", error);
-    throw new Error("Impossible de supprimer le paiement.");
+    console.error("Error deleting payment:", error);
+    throw new Error("Unable to delete payment.");
   }
 }
 
-// CRUD pour PARTICIPANTS - Déplacé vers la section CRM ci-dessous
+// CRUD for PARTICIPANTS - Moved to CRM section below
 
-// CRUD pour TEMPLATES
+// CRUD for TEMPLATES
 export async function getTemplates(): Promise<Template[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM templates");
     return rows as Template[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des templates:", error);
-    throw new Error("Impossible de récupérer les templates.");
+    console.error("Error retrieving templates:", error);
+    throw new Error("Unable to retrieve templates.");
   }
 }
 
@@ -394,8 +394,8 @@ export async function createTemplate(formData: FormData): Promise<{ id: number }
     const [result] = await pool.query("INSERT INTO templates (nom, contenu, domaine_id) VALUES (?, ?, ?)", [nom, contenu, parseInt(domaine_id)]);
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du template:", error);
-    throw new Error("Impossible de créer le template.");
+    console.error("Error creating template:", error);
+    throw new Error("Unable to create template.");
   }
 }
 
@@ -405,8 +405,8 @@ export async function getTemplate(id: number): Promise<Template | null> {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM templates WHERE id = ?", [id]);
     return rows[0] as Template | null;
   } catch (error) {
-    console.error("Erreur lors de la récupération du template:", error);
-    throw new Error("Impossible de récupérer le template.");
+    console.error("Error retrieving template:", error);
+    throw new Error("Unable to retrieve template.");
   }
 }
 
@@ -419,8 +419,8 @@ export async function updateTemplate(id: number, formData: FormData): Promise<{ 
     await pool.query("UPDATE templates SET nom = ?, contenu = ?, domaine_id = ? WHERE id = ?", [nom, contenu, parseInt(domaine_id), id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du template:", error);
-    throw new Error("Impossible de mettre à jour le template.");
+    console.error("Error updating template:", error);
+    throw new Error("Unable to update template.");
   }
 }
 
@@ -430,20 +430,20 @@ export async function deleteTemplate(id: number): Promise<{ success: boolean }> 
     await pool.query("DELETE FROM templates WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du template:", error);
-    throw new Error("Impossible de supprimer le template.");
+    console.error("Error deleting template:", error);
+    throw new Error("Unable to delete template.");
   }
 }
 
-// CRUD pour CLIENTS_PARTICIPANT
+// CRUD for CLIENT_PARTICIPANTS
 export async function getClientParticipants(): Promise<ClientParticipant[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM clients_participant");
     return rows as ClientParticipant[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des associations clients-participants:", error);
-    throw new Error("Impossible de récupérer les associations clients-participants.");
+    console.error("Error retrieving client-participant associations:", error);
+    throw new Error("Unable to retrieve client-participant associations.");
   }
 }
 
@@ -455,8 +455,8 @@ export async function createClientParticipant(formData: FormData): Promise<{ suc
     await pool.query("INSERT INTO clients_participant (client_id, participant_id) VALUES (?, ?)", [parseInt(client_id), parseInt(participant_id)]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la création de l'association client-participant:", error);
-    throw new Error("Impossible de créer l'association client-participant.");
+    console.error("Error creating client-participant association:", error);
+    throw new Error("Unable to create client-participant association.");
   }
 }
 
@@ -466,20 +466,20 @@ export async function deleteClientParticipant(client_id: number, participant_id:
     await pool.query("DELETE FROM clients_participant WHERE client_id = ? AND participant_id = ?", [client_id, participant_id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'association client-participant:", error);
-    throw new Error("Impossible de supprimer l'association client-participant.");
+    console.error("Error deleting client-participant association:", error);
+    throw new Error("Unable to delete client-participant association.");
   }
 }
 
-// CRUD pour DOMAINE_PARTICIPANT
+// CRUD for DOMAIN_PARTICIPANTS
 export async function getDomaineParticipants(): Promise<DomaineParticipant[]> {
   //  await checkAdminSession();
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM domaine_participant");
     return rows as DomaineParticipant[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des associations domaines-participants:", error);
-    throw new Error("Impossible de récupérer les associations domaines-participants.");
+    console.error("Error retrieving domain-participant associations:", error);
+    throw new Error("Unable to retrieve domain-participant associations.");
   }
 }
 
@@ -491,8 +491,8 @@ export async function createDomaineParticipant(formData: FormData): Promise<{ su
     await pool.query("INSERT INTO domaine_participant (domaine_id, participant_id) VALUES (?, ?)", [parseInt(domaine_id), parseInt(participant_id)]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la création de l'association domaine-participant:", error);
-    throw new Error("Impossible de créer l'association domaine-participant.");
+    console.error("Error creating domain-participant association:", error);
+    throw new Error("Unable to create domain-participant association.");
   }
 }
 
@@ -502,22 +502,22 @@ export async function deleteDomaineParticipant(domaine_id: number, participant_i
     await pool.query("DELETE FROM domaine_participant WHERE domaine_id = ? AND participant_id = ?", [domaine_id, participant_id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression de l'association domaine-participant:", error);
-    throw new Error("Impossible de supprimer l'association domaine-participant.");
+    console.error("Error deleting domain-participant association:", error);
+    throw new Error("Unable to delete domain-participant association.");
   }
 }
 
 
 
-// Conversion taille octets -> Mo/Go lisible
+// Convert bytes size to readable MB/GB
 
 export async function getAppVersions(): Promise<AppVersion[]> {
   try {
     const [rows] = await pool.query<RowDataPacket[]>("SELECT * FROM app_versions ORDER BY id DESC");
     return rows as AppVersion[];
   } catch (error) {
-    console.error("Erreur lors de la récupération des versions :", error);
-    throw new Error("Impossible de récupérer les versions de l'application.");
+    console.error("Error retrieving app versions:", error);
+    throw new Error("Unable to retrieve application versions.");
   }
 }
 
@@ -543,8 +543,8 @@ export async function createAppVersion(data: {
 
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création d'une version :", error);
-    throw new Error("Impossible de créer la version de l'application.");
+    console.error("Error creating app version:", error);
+    throw new Error("Unable to create application version.");
   }
 }
 
@@ -556,8 +556,8 @@ export async function getAppVersion(id: number): Promise<AppVersion | null> {
     );
     return (rows[0] as AppVersion) || null;
   } catch (error) {
-    console.error("Erreur lors de la récupération de la version :", error);
-    throw new Error("Impossible de récupérer la version.");
+    console.error("Error retrieving app version:", error);
+    throw new Error("Unable to retrieve version.");
   }
 }
 
@@ -572,7 +572,7 @@ export async function updateAppVersion(id: number, formData: FormData): Promise<
     const download_link = formData.get("download_link") as string;
 
     if (!os || !version || !sizeRaw || !cpu_requirement || !ram_requirement || !storage_requirement || !download_link) {
-      throw new Error("Champs manquants dans le formulaire.");
+      throw new Error("Missing fields in form.");
     }
 
     const size = typeof sizeRaw === "string" && !isNaN(Number(sizeRaw)) ? formatSize(Number(sizeRaw)) : sizeRaw;
@@ -586,36 +586,36 @@ export async function updateAppVersion(id: number, formData: FormData): Promise<
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour :", error);
-    throw new Error("Impossible de mettre à jour la version de l'application.");
+    console.error("Error updating app version:", error);
+    throw new Error("Unable to update application version.");
   }
 }
 
 export async function deleteAppVersion(id: number): Promise<{ success: boolean }> {
   try {
-    // 1️⃣ Récupérer d'abord le lien de téléchargement
+    // 1️⃣ First retrieve the download link
     const [rows] = await pool.query("SELECT download_link FROM app_versions WHERE id = ?", [id]);
     if (!Array.isArray(rows) || rows.length === 0) {
-      throw new Error("Version non trouvée en base de données.");
+      throw new Error("Version not found in database.");
     }
 
     const fileUrl = (rows as any)[0].download_link as string;
 
-    // 2️⃣ Supprimer la ligne SQL
+    // 2️⃣ Delete the SQL row
     await pool.query("DELETE FROM app_versions WHERE id = ?", [id]);
 
-    // 3️⃣ Extraire la clé (path du fichier) depuis l’URL publique
-    // Exemple: https://smartfilepro.sfo3.digitaloceanspaces.com/app-versions/1730142523123-setup.exe
+    // 3️⃣ Extract the key (file path) from the public URL
+    // Example: https://smartfilepro.sfo3.digitaloceanspaces.com/app-versions/1730142523123-setup.exe
     const bucketName = process.env.DO_SPACES_BUCKET!;
     const endpoint = process.env.DO_SPACES_ENDPOINT!.replace("https://", "");
     const key = fileUrl.split(`${bucketName}.${endpoint}/`)[1]; // => app-versions/...
 
     if (!key) {
-      console.warn("⚠️ Impossible d’extraire la clé du fichier à supprimer:", fileUrl);
+      console.warn("⚠️ Unable to extract file key for deletion:", fileUrl);
       return { success: true };
     }
 
-    // 4️⃣ Supprimer le fichier du bucket DigitalOcean
+    // 4️⃣ Delete the file from DigitalOcean bucket
     const s3 = new S3Client({
       region: process.env.DO_SPACES_REGION || "sfo3",
       endpoint: process.env.DO_SPACES_ENDPOINT || "https://sfo3.digitaloceanspaces.com",
@@ -632,17 +632,17 @@ export async function deleteAppVersion(id: number): Promise<{ success: boolean }
     });
 
     await s3.send(deleteCommand);
-    console.log(`🗑️ Fichier supprimé de DigitalOcean: ${key}`);
+    console.log(`🗑️ File deleted from DigitalOcean: ${key}`);
 
     return { success: true };
   } catch (error) {
-    console.error("❌ Erreur lors de la suppression complète:", error);
-    throw new Error("Échec de la suppression de la version ou du fichier associé.");
+    console.error("❌ Error during complete deletion:", error);
+    throw new Error("Failed to delete version or associated file.");
   }
 }
 
 // ============================================
-// CRM ACTIONS - GESTION PARTICIPANTS
+// CRM ACTIONS - PARTICIPANTS MANAGEMENT
 // ============================================
 
 export async function getParticipants(filters?: { domain_id?: number; search?: string }): Promise<any[]> {
@@ -666,8 +666,8 @@ export async function getParticipants(filters?: { domain_id?: number; search?: s
     const [rows] = await pool.query<RowDataPacket[]>(query, params);
     return rows;
   } catch (error) {
-    console.error("Erreur lors de la récupération des participants:", error);
-    throw new Error("Impossible de récupérer les participants.");
+    console.error("Error retrieving participants:", error);
+    throw new Error("Unable to retrieve participants.");
   }
 }
 
@@ -675,7 +675,7 @@ export async function createParticipant(data: { domain_id: number; name: string;
   try {
     const [existing] = await pool.query<RowDataPacket[]>("SELECT id FROM participants WHERE email = ?", [data.email]);
     if (existing.length > 0) {
-      throw new Error("Un participant avec cet email existe déjà");
+      throw new Error("A participant with this email already exists");
     }
 
     const [result] = await pool.query(
@@ -684,7 +684,7 @@ export async function createParticipant(data: { domain_id: number; name: string;
     );
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création du participant:", error);
+    console.error("Error creating participant:", error);
     throw error;
   }
 }
@@ -699,13 +699,13 @@ export async function updateParticipant(id: number, data: Partial<Participant>):
     if (data.domain_id !== undefined) { setClauses.push('domain_id = ?'); params.push(data.domain_id); }
     if (data.poste !== undefined) { setClauses.push('poste = ?'); params.push(data.poste); }
 
-    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    if (setClauses.length === 0) throw new Error("No fields to update");
 
     params.push(id);
     await pool.query(`UPDATE participants SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du participant:", error);
+    console.error("Error updating participant:", error);
     throw error;
   }
 }
@@ -715,13 +715,13 @@ export async function deleteParticipant(id: number): Promise<{ success: boolean 
     await pool.query("DELETE FROM participants WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression du participant:", error);
-    throw new Error("Impossible de supprimer le participant.");
+    console.error("Error deleting participant:", error);
+    throw new Error("Unable to delete participant.");
   }
 }
 
 // ============================================
-// CRM ACTIONS - GESTION CLIENTS
+// CRM ACTIONS - CLIENTS MANAGEMENT
 // ============================================
 
 export async function getClientsWithDetails(): Promise<any[]> {
@@ -745,8 +745,8 @@ export async function getClientsWithDetails(): Promise<any[]> {
     const [rows] = await pool.query<RowDataPacket[]>(query);
     return rows;
   } catch (error) {
-    console.error("Erreur lors de la récupération des clients:", error);
-    throw new Error("Impossible de récupérer les clients.");
+    console.error("Error retrieving clients:", error);
+    throw new Error("Unable to retrieve clients.");
   }
 }
 
@@ -755,13 +755,13 @@ export async function updateClientStatus(id: number, status: 'active' | 'inactiv
     await pool.query("UPDATE clients SET status = ? WHERE id = ?", [status, id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour du statut:", error);
-    throw new Error("Impossible de mettre à jour le statut.");
+    console.error("Error updating status:", error);
+    throw new Error("Unable to update status.");
   }
 }
 
 // ============================================
-// CRM ACTIONS - GESTION ABONNEMENTS
+// CRM ACTIONS - SUBSCRIPTIONS MANAGEMENT
 // ============================================
 
 export async function getSubscriptions(): Promise<any[]> {
@@ -782,8 +782,8 @@ export async function getSubscriptions(): Promise<any[]> {
     const [rows] = await pool.query<RowDataPacket[]>(query);
     return rows;
   } catch (error) {
-    console.error("Erreur lors de la récupération des abonnements:", error);
-    throw new Error("Impossible de récupérer les abonnements.");
+    console.error("Error retrieving subscriptions:", error);
+    throw new Error("Unable to retrieve subscriptions.");
   }
 }
 
@@ -796,19 +796,19 @@ export async function updateSubscription(id: number, data: { status?: string; ac
     if (data.account_type_id !== undefined) { setClauses.push('account_type_id = ?'); params.push(data.account_type_id); }
     if (data.end_date !== undefined) { setClauses.push('end_date = ?'); params.push(data.end_date); }
 
-    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    if (setClauses.length === 0) throw new Error("No fields to update");
 
     params.push(id);
     await pool.query(`UPDATE subscriptions SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'abonnement:", error);
+    console.error("Error updating subscription:", error);
     throw error;
   }
 }
 
 // ============================================
-// CRM ACTIONS - GESTION VIDÉOS DÉMO
+// CRM ACTIONS - DEMO VIDEOS MANAGEMENT
 // ============================================
 
 export async function getDemoVideos(): Promise<any[]> {
@@ -818,7 +818,7 @@ export async function getDemoVideos(): Promise<any[]> {
     );
     return rows;
   } catch (error) {
-    console.error("Erreur lors de la récupération des vidéos:", error);
+    console.error("Error retrieving videos:", error);
     return [];
   }
 }
@@ -839,7 +839,7 @@ export async function createDemoVideo(data: {
     );
     return { id: (result as any).insertId };
   } catch (error) {
-    console.error("Erreur lors de la création de la vidéo:", error);
+    console.error("Error creating video:", error);
     throw error;
   }
 }
@@ -856,13 +856,13 @@ export async function updateDemoVideo(id: number, data: Partial<any>): Promise<{
       }
     });
 
-    if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+    if (setClauses.length === 0) throw new Error("No fields to update");
 
     params.push(id);
     await pool.query(`UPDATE demo_videos SET ${setClauses.join(', ')} WHERE id = ?`, params);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la mise à jour de la vidéo:", error);
+    console.error("Error updating video:", error);
     throw error;
   }
 }
@@ -872,13 +872,13 @@ export async function deleteDemoVideo(id: number): Promise<{ success: boolean }>
     await pool.query("DELETE FROM demo_videos WHERE id = ?", [id]);
     return { success: true };
   } catch (error) {
-    console.error("Erreur lors de la suppression de la vidéo:", error);
-    throw new Error("Impossible de supprimer la vidéo.");
+    console.error("Error deleting video:", error);
+    throw new Error("Unable to delete video.");
   }
 }
 
 // ============================================
-// CRM ACTIONS - STATISTIQUES
+// CRM ACTIONS - STATISTICS
 // ============================================
 
 export async function getCRMStatistics(): Promise<any> {
@@ -895,7 +895,7 @@ export async function getCRMStatistics(): Promise<any> {
       active_subscriptions: subscriptionsCount[0]?.total || 0,
     };
   } catch (error) {
-    console.error("Erreur lors de la récupération des statistiques:", error);
+    console.error("Error retrieving statistics:", error);
     return { total_clients: 0, total_participants: 0, total_domains: 0, active_subscriptions: 0 };
   }
 }

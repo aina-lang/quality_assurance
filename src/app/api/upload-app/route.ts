@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     // ⏳ URL pré-signée (valable 5 minutes)
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 * 5 });
 
-    // 🌐 URL publique finale du fichier
+    // 🌐 Final public file URL
     const fileUrl = `${process.env.DO_SPACES_ENDPOINT!.replace(
       "https://",
       `https://${process.env.DO_SPACES_BUCKET!}.`

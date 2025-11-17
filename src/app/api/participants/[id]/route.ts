@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/app/lib/db";
 import { Participant } from "@/app/lib/types";
 
-// Fonction utilitaire pour CORS
+// Utility function for CORS
 const addCORSHeaders = (response: NextResponse) => {
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -11,28 +11,28 @@ const addCORSHeaders = (response: NextResponse) => {
     return response;
 };
 
-// Handler OPTIONS (préflight CORS)
+// Handler OPTIONS (CORS preflight)
 export async function OPTIONS() {
     const response = new NextResponse(null, { status: 204 });
     return addCORSHeaders(response);
 }
 
-// GET : Récupérer un participant par ID
+// GET: Retrieve a participant by ID
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const [rows] = await pool.execute("SELECT * FROM participants WHERE id = ?", [params.id]);
-        if ((rows as any[]).length === 0) throw new Error("Participant non trouvé");
+        if ((rows as any[]).length === 0) throw new Error("Participant not found");
 
         const response = NextResponse.json({ data: (rows as any[])[0] }, { status: 200 });
         return addCORSHeaders(response);
     } catch (error: any) {
-        console.error("Erreur GET /participants/[id]:", error);
+        console.error("Error GET /participants/[id]:", error);
         const response = NextResponse.json({ message: error.message }, { status: 404 });
         return addCORSHeaders(response);
     }
 }
 
-// PUT : Modifier un participant
+// PUT: Update a participant
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const body = (await req.json()) as Partial<Participant>;
@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
             values.push(body.domain_id);
         }
 
-        if (setClauses.length === 0) throw new Error("Aucun champ à mettre à jour");
+        if (setClauses.length === 0) throw new Error("No fields to update");
 
         values.push(params.id);
 
@@ -72,22 +72,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         const response = NextResponse.json({ data: (updated as any[])[0] }, { status: 200 });
         return addCORSHeaders(response);
     } catch (error: any) {
-        console.error("Erreur PUT /participants/[id]:", error);
+        console.error("Error PUT /participants/[id]:", error);
         const response = NextResponse.json({ message: error.message }, { status: 400 });
         return addCORSHeaders(response);
     }
 }
 
-// DELETE : Supprimer un participant
+// DELETE: Delete a participant
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const [result] = await pool.execute("DELETE FROM participants WHERE id = ?", [params.id]);
-        if ((result as any).affectedRows === 0) throw new Error("Participant non trouvé");
+        if ((result as any).affectedRows === 0) throw new Error("Participant not found");
 
-        const response = NextResponse.json({ message: "Participant supprimé" }, { status: 200 });
+        const response = NextResponse.json({ message: "Participant deleted" }, { status: 200 });
         return addCORSHeaders(response);
     } catch (error: any) {
-        console.error("Erreur DELETE /participants/[id]:", error);
+        console.error("Error DELETE /participants/[id]:", error);
         const response = NextResponse.json({ message: error.message }, { status: 400 });
         return addCORSHeaders(response);
     }
