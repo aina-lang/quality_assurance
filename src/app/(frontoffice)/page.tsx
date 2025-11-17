@@ -17,47 +17,47 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
-export default function Accueil() {
+export default function Home() {
   const features = [
     {
       icon: <FileText className="h-6 w-6" />,
-      title: "Gestion de Templates",
-      description: "Créez et gérez facilement vos templates pour programmes de formation et manuels standards."
+      title: "Template Management",
+      description: "Create and manage templates for training programs and standard manuals with ease."
     },
     {
       icon: <Users className="h-6 w-6" />,
-      title: "Invitations Participants",
-      description: "Invitez et gérez les participants à vos programmes de formation en quelques clics."
+      title: "Participant Invitations",
+      description: "Invite and manage training participants in just a few clicks."
     },
     {
       icon: <Settings className="h-6 w-6" />,
-      title: "Domaines Limités",
-      description: "Organisez votre travail par domaines selon votre abonnement (10 à 20+ domaines)."
+      title: "Domain Management",
+      description: "Organize work by domain according to your plan (10 to 20+ domains)."
     },
     {
       icon: <Shield className="h-6 w-6" />,
-      title: "Sécurité Avancée",
-      description: "Vos données sont protégées avec un système de sécurité de niveau entreprise."
+      title: "Advanced Security",
+      description: "Enterprise-grade protection keeps all of your quality data secure."
     },
     {
       icon: <Zap className="h-6 w-6" />,
-      title: "Performance Optimale",
-      description: "Interface rapide et réactive pour une productivité maximale."
+      title: "High Performance",
+      description: "Lightning-fast interface to keep teams productive."
     },
     {
       icon: <Globe className="h-6 w-6" />,
-      title: "Multi-plateforme",
-      description: "Compatible Windows, macOS et Linux pour s'adapter à votre environnement."
+      title: "Multi-platform",
+      description: "Works on Windows, macOS, and Linux so every team can plug in."
     }
   ];
 
   const benefits = [
-    "Réduction du temps de création de documents de 70%",
-    "Amélioration de la cohérence des formations",
-    "Centralisation de tous vos manuels et procédures",
-    "Collaboration en temps réel avec votre équipe",
-    "Suivi détaillé des progrès et performances",
-    "Interface intuitive similaire à Canva"
+    "Reduce document creation time by 70%",
+    "Improve training consistency across the company",
+    "Centralize manuals, procedures, and templates",
+    "Collaborate with your team in real time",
+    "Track progress and performance in detail",
+    "Intuitive, Canva-like design experience"
   ];
 
   const platforms = [
@@ -73,29 +73,29 @@ export default function Accueil() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center space-y-8">
             <Badge variant="secondary" className="mb-4">
-              Nouveau : Version 2.0 disponible
+              New: Version 2.0 available
             </Badge>
 
             <h1 className="text-4xl md:text-6xl font-bold tracking-wider">
               <span className="text-brand-500">Quality Assurance </span>
               <br />
-              <span className="text-muted-foreground">pour Entreprises</span>
+              <span className="text-muted-foreground">for Enterprises</span>
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Logiciel de gestion de qualité pour entreprises, avec templates pour programmes de formation,
-              manuels standards, et bien plus. Compatible Windows, macOS, Linux.
+              Quality management software for enterprises with templates for training programs,
+              standard manuals, and more. Compatible with Windows, macOS, and Linux.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button className="text-lg px-8 py-6">
                 <Link href="subscription">
-                  Commencer gratuitement
+                  Get started for free
                 </Link>
               </Button>
               <Button variant="outline" className="text-lg px-8 py-6">
                 <Link href="/demo">
-                  Voir la démo
+                  Watch the demo
                 </Link>
               </Button>
             </div>
@@ -121,10 +121,10 @@ export default function Accueil() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-16">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Fonctionnalités Principales
+            Key Features
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Découvrez les outils puissants qui transformeront votre gestion de la qualité
+            Discover the powerful tools that transform your quality operations.
           </p>
         </div>
 
@@ -153,11 +153,10 @@ export default function Accueil() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold">
-                Pourquoi choisir Quality Assurance ?
+                Why choose Quality Assurance?
               </h2>
               <p className="text-lg text-muted-foreground">
-                Notre solution révolutionne la façon dont les entreprises gèrent leurs processus qualité
-                et leurs programmes de formation.
+                Our platform reshapes how teams manage quality processes and training programs.
               </p>
               <ul className="space-y-4">
                 {benefits.map((benefit, index) => (
@@ -173,10 +172,9 @@ export default function Accueil() {
               <Card className="p-8 bg-gradient-to-br from-brand/5 to-secondary/5">
                 <CardContent className="space-y-6">
                   <div className="text-center">
-                    <h3 className="text-2xl font-bold mb-2">Interface Intuitive</h3>
+                    <h3 className="text-2xl font-bold mb-2">Intuitive Interface</h3>
                     <p className="text-muted-foreground">
-                      Similaire à Canva, notre interface permet de créer facilement vos templates
-                      et documents de formation.
+                      A Canva-like experience that makes designing templates and training documents simple.
                     </p>
                   </div>
 
@@ -201,22 +199,21 @@ export default function Accueil() {
         <Card className="bg-gradient-to-r from-brand-200 to-brand-500/80 text-white">
           <CardContent className="p-12 text-center space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold">
-              Prêt à transformer votre gestion qualité ?
+              Ready to transform your quality management?
             </h2>
             <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Rejoignez des milliers d'entreprises qui font confiance à Quality Assurance pour
-              optimiser leurs processus qualité et formations.
+              Join the teams that trust Quality Assurance to streamline their processes and training.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button className="text-lg px-8 py-6 ">
                 <Link href="/subscription" className='flex items-center'>
                   <Download className="mr-2 h-5 w-5" />
-                  Commencer gratuitement
+                  Get started for free
                 </Link>
               </Button>
               <Button variant="outline" className="text-lg px-8 py-6 border-brand-foreground text-brand-500 hover:bg-brand-foreground hover:text-brand-500">
                 <Link href="/offres">
-                  Voir les tarifs
+                  View pricing
                 </Link>
               </Button>
             </div>

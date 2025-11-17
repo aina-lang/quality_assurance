@@ -8,95 +8,95 @@ import Button from '@/components/ui/button/Button';
 export default function Offres() {
     const plans = [
         {
-            name: "Gratuit",
+            name: "Free",
             price: "0",
             period: "Ar",
-            description: "Parfait pour découvrir Quality Assurance",
+            description: "Perfect for discovering Quality Assurance",
             badge: null,
             features: [
-                "10 domaines inclus",
-                "Templates de base",
-                "Support communautaire",
-                "Exportation PDF",
-                "1 utilisateur",
-                "Stockage 1 GB"
+                "10 domains included",
+                "Starter template library",
+                "Community support",
+                "PDF export",
+                "1 user",
+                "1 GB storage"
             ],
             limitations: [
-                "Fonctionnalités limitées",
-                "Pas de support prioritaire"
+                "Limited functionality",
+                "No priority support"
             ],
-            cta: "Commencer gratuitement",
+            cta: "Start for free",
             popular: false
         },
         {
             name: "Premium",
             price: "50,000",
             period: "Ar/an",
-            description: "Idéal pour les petites équipes",
-            badge: "Populaire",
+            description: "Ideal for small teams",
+            badge: "Popular",
             features: [
-                "15 domaines inclus",
-                "Tous les templates",
-                "Support email prioritaire",
-                "Exportation multiple formats",
-                "Jusqu'à 5 utilisateurs",
-                "Stockage 10 GB",
-                "Collaboration en temps réel",
-                "Historique des versions"
+                "15 domains included",
+                "Full template catalog",
+                "Priority email support",
+                "Multi-format export",
+                "Up to 5 users",
+                "10 GB storage",
+                "Real-time collaboration",
+                "Version history"
             ],
             limitations: [],
-            cta: "Choisir Premium",
+            cta: "Choose Premium",
             popular: true
         },
         {
             name: "Platinum",
             price: "100,000",
             period: "Ar/an",
-            description: "Pour les équipes en croissance",
-            badge: "Recommandé",
+            description: "Built for scaling teams",
+            badge: "Recommended",
             features: [
-                "20 domaines inclus",
-                "Templates personnalisés",
-                "Support téléphonique",
-                "API d'intégration",
-                "Jusqu'à 15 utilisateurs",
-                "Stockage 50 GB",
-                "Rapports avancés",
-                "Formation en ligne",
-                "Sauvegarde automatique"
+                "20 domains included",
+                "Custom templates",
+                "Phone support",
+                "Integration API",
+                "Up to 15 users",
+                "50 GB storage",
+                "Advanced reporting",
+                "Live training",
+                "Automatic backups"
             ],
             limitations: [],
-            cta: "Choisir Platinum",
+            cta: "Choose Platinum",
             popular: false
         },
         {
             name: "VIP",
             price: "200,000",
             period: "Ar/an",
-            description: "Solution entreprise complète",
-            badge: "Entreprise",
+            description: "Complete enterprise solution",
+            badge: "Enterprise",
             features: [
-                "Domaines illimités (+20)",
-                "Templates sur mesure",
-                "Support dédié 24/7",
-                "Intégrations personnalisées",
-                "Utilisateurs illimités",
-                "Stockage illimité",
-                "Tableau de bord exécutif",
-                "Formation sur site",
-                "Consultant dédié",
-                "SLA garanti"
+                "Unlimited domains (+20)",
+                "Bespoke templates",
+                "Dedicated 24/7 support",
+                "Custom integrations",
+                "Unlimited users",
+                "Unlimited storage",
+                "Executive dashboard",
+                "On-site training",
+                "Dedicated consultant",
+                "Guaranteed SLA"
             ],
             limitations: [],
-            cta: "Contacter l'équipe",
+            cta: "Contact our team",
             popular: false
         }
     ];
 
     const paymentMethods = [
         "PayPal",
-        "Carte bancaire",
-        "Virement bancaire",
+        "Credit card",
+        "Bank transfer",
         "Mobile Money",
         "Orange Money",
         "MVola"
@@ -104,20 +104,20 @@ export default function Offres() {
 
     const faqs = [
         {
-            question: "Puis-je changer d'abonnement à tout moment ?",
-            answer: "Oui, vous pouvez upgrader ou downgrader votre abonnement à tout moment. Les changements prennent effet immédiatement."
+            question: "Can I change plans at any time?",
+            answer: "Yes. You can upgrade or downgrade whenever you want, and the change takes effect immediately."
         },
         {
-            question: "Y a-t-il une période d'essai ?",
-            answer: "L'abonnement Gratuit vous permet de tester les fonctionnalités de base. Pour les abonnements payants, nous offrons une garantie de remboursement de 30 jours."
+            question: "Is there a trial period?",
+            answer: "The Free plan lets you test core features. Paid plans include a 30-day money-back guarantee."
         },
         {
-            question: "Comment fonctionne la facturation ?",
-            answer: "La facturation est annuelle. Vous recevrez une facture au début de chaque période d'abonnement."
+            question: "How does billing work?",
+            answer: "Billing is annual. You’ll receive an invoice at the start of each subscription period."
         },
         {
-            question: "Que se passe-t-il si je dépasse mes limites ?",
-            answer: "Nous vous notifierons avant d'atteindre vos limites. Vous pourrez alors upgrader votre abonnement ou supprimer du contenu."
+            question: "What if I exceed my limits?",
+            answer: "We notify you before you hit any limits so you can upgrade or clean up content in advance."
         }
     ];
 
@@ -128,11 +128,10 @@ export default function Offres() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
                     <div className="text-center space-y-6">
                         <h1 className="text-4xl md:text-6xl font-bold tracking-wider text-muted-foreground">
-                            Choisissez votre <span className="text-brand-500">abonnement</span>
+                            Choose your <span className="text-brand-500">plan</span>
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                            Des plans flexibles adaptés à tous les besoins, de l'entrepreneur individuel
-                            aux grandes entreprises. Commencez gratuitement et évoluez selon vos besoins.
+                            Flexible plans for every need, from solo builders to enterprise teams. Start for free and scale as you grow.
                         </p>
                     </div>
                 </div>
@@ -155,8 +154,8 @@ export default function Offres() {
                                         variant={plan.popular ? "default" : "secondary"}
                                         className={`px-3 py-1 text-sm flex items-center ${plan.popular ? 'bg-brand-500 text-white' : ''}`}
                                     >
-                                        {plan.badge === "Populaire" && <Star className="w-3 h-3 mr-1" />}
-                                        {plan.badge === "Entreprise" && <Crown className="w-3 h-3 mr-1" />}
+                                        {plan.badge === "Popular" && <Star className="w-3 h-3 mr-1" />}
+                                        {plan.badge === "Enterprise" && <Crown className="w-3 h-3 mr-1" />}
                                         {plan.badge}
                                     </Badge>
                                 </div>
@@ -167,7 +166,7 @@ export default function Offres() {
                                 <CardDescription className="text-base">{plan.description}</CardDescription>
                                 <div className="pt-4">
                                     <div className="text-4xl font-bold">
-                                        {plan.price === "0" ? "Gratuit" : `${plan.price.toLocaleString()}`}
+                                        {plan.price === "0" ? "Free" : `${plan.price.toLocaleString()}`}
                                         {plan.price !== "0" && (
                                             <span className="text-lg font-normal text-muted-foreground ml-1">
                                                 {plan.period}
@@ -216,9 +215,9 @@ export default function Offres() {
             <section className="bg-muted/50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="text-center space-y-8">
-                        <h2 className="text-3xl font-bold">Moyens de paiement acceptés</h2>
+                        <h2 className="text-3xl font-bold">Accepted payment methods</h2>
                         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                            Nous acceptons plusieurs moyens de paiement pour votre convenance
+                            Choose the payment option that works best for your team.
                         </p>
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-4xl mx-auto">
@@ -236,7 +235,7 @@ export default function Offres() {
 
                         <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
                             <Shield className="h-4 w-4" />
-                            <span>Paiements sécurisés avec chiffrement SSL</span>
+                            <span>Secure payments protected by SSL encryption</span>
                         </div>
                     </div>
                 </div>
@@ -245,9 +244,9 @@ export default function Offres() {
             {/* Features Comparison */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center space-y-4 mb-12">
-                    <h2 className="text-3xl font-bold">Comparaison détaillée</h2>
+                    <h2 className="text-3xl font-bold">Detailed comparison</h2>
                     <p className="text-lg text-muted-foreground">
-                        Trouvez l'abonnement qui correspond parfaitement à vos besoins
+                        Find the plan that fits your workflow perfectly.
                     </p>
                 </div>
 
@@ -257,8 +256,8 @@ export default function Offres() {
                             <table className="w-full">
                                 <thead className="bg-muted/50">
                                     <tr>
-                                        <th className="text-left p-4 font-semibold">Fonctionnalités</th>
-                                        <th className="text-center p-4 font-semibold">Gratuit</th>
+                                        <th className="text-left p-4 font-semibold">Features</th>
+                                        <th className="text-center p-4 font-semibold">Free</th>
                                         <th className="text-center p-4 font-semibold">Premium</th>
                                         <th className="text-center p-4 font-semibold">Platinum</th>
                                         <th className="text-center p-4 font-semibold">VIP</th>
@@ -266,32 +265,32 @@ export default function Offres() {
                                 </thead>
                                 <tbody className="divide-y">
                                     <tr>
-                                        <td className="p-4 font-medium">Nombre de domaines</td>
+                                        <td className="p-4 font-medium">Number of domains</td>
                                         <td className="text-center p-4">10</td>
                                         <td className="text-center p-4">15</td>
                                         <td className="text-center p-4">20</td>
-                                        <td className="text-center p-4">Illimité</td>
+                                        <td className="text-center p-4">Unlimited</td>
                                     </tr>
                                     <tr className="bg-muted/25">
-                                        <td className="p-4 font-medium">Utilisateurs</td>
+                                        <td className="p-4 font-medium">Users</td>
                                         <td className="text-center p-4">1</td>
                                         <td className="text-center p-4">5</td>
                                         <td className="text-center p-4">15</td>
-                                        <td className="text-center p-4">Illimité</td>
+                                        <td className="text-center p-4">Unlimited</td>
                                     </tr>
                                     {/* <tr>
-                                        <td className="p-4 font-medium">Stockage</td>
+                                        <td className="p-4 font-medium">Storage</td>
                                         <td className="text-center p-4">1 GB</td>
                                         <td className="text-center p-4">10 GB</td>
                                         <td className="text-center p-4">50 GB</td>
-                                        <td className="text-center p-4">Illimité</td>
+                                        <td className="text-center p-4">Unlimited</td>
                                     </tr> */}
                                     <tr className="bg-muted/25">
                                         <td className="p-4 font-medium">Support</td>
-                                        <td className="text-center p-4">Communauté</td>
+                                        <td className="text-center p-4">Community</td>
                                         <td className="text-center p-4">Email</td>
-                                        <td className="text-center p-4">Téléphone</td>
-                                        <td className="text-center p-4">24/7 Dédié</td>
+                                        <td className="text-center p-4">Phone</td>
+                                        <td className="text-center p-4">24/7 Dedicated</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -304,9 +303,9 @@ export default function Offres() {
             <section className="bg-muted/50">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="text-center space-y-4 mb-12">
-                        <h2 className="text-3xl font-bold">Questions fréquentes</h2>
+                        <h2 className="text-3xl font-bold">Frequently asked questions</h2>
                         <p className="text-lg text-muted-foreground">
-                            Trouvez rapidement les réponses à vos questions
+                            Get quick answers to the most common questions.
                         </p>
                     </div>
 
@@ -330,15 +329,15 @@ export default function Offres() {
                 <Card className="bg-gradient-to-r from-brand-200 to-brand-500/80 text-white">
                     <CardContent className="p-12 text-center space-y-6">
                         <h2 className="text-3xl font-bold">
-                            Prêt à commencer ?
+                            Ready to get started?
                         </h2>
                         <p className="text-xl opacity-90 max-w-2xl mx-auto">
-                            Rejoignez des milliers d'entreprises qui optimisent leur gestion qualité avec Quality Assurance
+                            Join the teams that trust Quality Assurance to elevate their quality operations.
                         </p>
                         <Button variant="outline" className="text-lg px-8 py-6">
                             <Link href="subscription" className='flex'>
                                 <Zap className="mr-2 h-5 w-5" />
-                                Commencer maintenant
+                                Get started now
                             </Link>
                         </Button>
                     </CardContent>

@@ -17,7 +17,7 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 import { loadStripe } from '@stripe/stripe-js';
 import { createPaymentIntent } from "@/app/actions/createPaymentIntent";
 
-// Charger Stripe avec la clé publique
+// Load Stripe with the public key
 const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY ?? "pk_test_XXXX");
 
 const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
@@ -42,7 +42,7 @@ const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
                 onPaymentSuccess();
             }
         } catch (error) {
-            Swal.fire("Erreur", error.message, "error");
+            Swal.fire("Error", error.message, "error");
         } finally {
             setIsProcessing(false);
         }
@@ -61,7 +61,7 @@ const PaymentForm = ({ onPaymentSuccess, clientSecret }) => {
                 />
             </div>
             <Button type="submit" disabled={isProcessing || !stripe || !elements}>
-                {isProcessing ? "Traitement..." : "Payer maintenant"}
+                {isProcessing ? "Processing..." : "Pay now"}
             </Button>
         </form>
     );
@@ -129,30 +129,30 @@ export default function Inscription() {
         let valid = true;
         const newErrors = { ...errors };
 
-        if (!formData.nom.trim()) { newErrors.nom = "Le nom est requis"; valid = false; } else newErrors.nom = "";
-        if (!formData.email.trim()) { newErrors.email = "L'email est requis"; valid = false; }
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { newErrors.email = "Format d'email invalide"; valid = false; }
+        if (!formData.nom.trim()) { newErrors.nom = "Name is required"; valid = false; } else newErrors.nom = "";
+        if (!formData.email.trim()) { newErrors.email = "Email is required"; valid = false; }
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { newErrors.email = "Invalid email format"; valid = false; }
         else newErrors.email = "";
 
-        if (!formData.motDePasse) { newErrors.motDePasse = "Le mot de passe est requis"; valid = false; }
-        else if (formData.motDePasse.length < 8) { newErrors.motDePasse = "Mot de passe minimum 8 caractères"; valid = false; }
+        if (!formData.motDePasse) { newErrors.motDePasse = "Password is required"; valid = false; }
+        else if (formData.motDePasse.length < 8) { newErrors.motDePasse = "Password must be at least 8 characters"; valid = false; }
         else newErrors.motDePasse = "";
 
-        if (formData.motDePasse !== formData.confirmMotDePasse) { newErrors.confirmMotDePasse = "Les mots de passe ne correspondent pas"; valid = false; }
+        if (formData.motDePasse !== formData.confirmMotDePasse) { newErrors.confirmMotDePasse = "Passwords do not match"; valid = false; }
         else newErrors.confirmMotDePasse = "";
 
-        if (!formData.legal_info) { newErrors.legal_info = "Veuillez fournir un document légal"; valid = false; } else newErrors.legal_info = "";
+        if (!formData.legal_info) { newErrors.legal_info = "Please upload a legal document"; valid = false; } else newErrors.legal_info = "";
 
-        if (!formData.accepteConditions) { newErrors.accepteConditions = "Vous devez accepter les conditions"; valid = false; } else newErrors.accepteConditions = "";
+        if (!formData.accepteConditions) { newErrors.accepteConditions = "You must accept the terms"; valid = false; } else newErrors.accepteConditions = "";
 
         setErrors(newErrors);
         return valid;
     };
 
     const handleSubmit = async () => {
-        if (!formData.typeCompte) { setErrors(e => ({ ...e, typeCompte: "Veuillez sélectionner un type de compte" })); return; }
+        if (!formData.typeCompte) { setErrors(e => ({ ...e, typeCompte: "Please select an account type" })); return; }
         if (isPaidPlan && !clientSecret) {
-            Swal.fire("Erreur", "Veuillez compléter le paiement", "error");
+            Swal.fire("Error", "Please complete the payment", "error");
             return;
         }
 
@@ -167,7 +167,7 @@ export default function Inscription() {
 
             const result = await createClient(fd);
             if (result.success) {
-                Swal.fire("Succès", result.message, "success");
+                Swal.fire("Success", result.message, "success");
                 setFormData({
                     nom: "",
                     email: "",
@@ -188,11 +188,11 @@ export default function Inscription() {
                 });
                 setCurrentStep("info");
             } else {
-                Swal.fire("Erreur", result.message, "error");
+                Swal.fire("Error", result.message, "error");
             }
         } catch (error) {
             console.error(error);
-            Swal.fire("Erreur", "Impossible de créer le compte. " + (error as Error).message, "error");
+            Swal.fire("Error", "Unable to create the account. " + (error as Error).message, "error");
         } finally {
             setIsLoading(false);
         }
@@ -208,7 +208,7 @@ export default function Inscription() {
 
         const result = await createClient(fd);
         if (result.success) {
-            Swal.fire("Succès", result.message, "success");
+            Swal.fire("Success", result.message, "success");
             setFormData({
                 nom: "",
                 email: "",
@@ -229,7 +229,7 @@ export default function Inscription() {
             });
             setCurrentStep("info");
         } else {
-            Swal.fire("Erreur", result.message, "error");
+            Swal.fire("Error", result.message, "error");
         }
     };
 
@@ -238,11 +238,11 @@ export default function Inscription() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="text-center space-y-4 mb-8">
                     <h1 className="text-4xl md:text-6xl font-bold tracking-wider">
-                        <span className="text-brand-500">Créer votre compte</span>
+                        <span className="text-brand-500">Create your account</span>
                         <br />
                         <span className="text-muted-foreground">Quality Assurance</span>
                     </h1>
-                    <p className="text-lg text-muted-foreground">Rejoignez des milliers d'entreprises qui optimisent leur gestion qualité</p>
+                    <p className="text-lg text-muted-foreground">Join the teams who already trust Quality Assurance with their quality programs.</p>
                 </div>
 
                 <Tabs value={currentStep} onValueChange={setCurrentStep} className="space-y-6">
@@ -252,28 +252,28 @@ export default function Inscription() {
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
                                     <User className="h-5 w-5" />
-                                    <span>Informations personnelles</span>
+                                    <span>Personal information</span>
                                 </CardTitle>
-                                <CardDescription>Remplissez vos informations pour créer votre compte</CardDescription>
+                                <CardDescription>Tell us a bit about you to create your account</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); if (validateStep1()) setCurrentStep("plan"); }}>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <Label htmlFor="nom">Sigle | Nom personnel *</Label>
-                                            <Input id="nom" value={formData.nom} onChange={e => setFormData({ ...formData, nom: e.target.value })} placeholder="Quality assurance" className="pr-10 bg-gray-50" />
+                                            <Label htmlFor="nom">Company or personal name *</Label>
+                                            <Input id="nom" value={formData.nom} onChange={e => setFormData({ ...formData, nom: e.target.value })} placeholder="Quality Assurance" className="pr-10 bg-gray-50" />
                                             {errors.nom && <p className="text-xs text-red-500">{errors.nom}</p>}
                                         </div>
                                         <div className="space-y-1">
                                             <Label htmlFor="email">Email *</Label>
-                                            <Input id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="rakoto@gmail.com" className="pr-10 bg-gray-50" />
+                                            <Input id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="you@company.com" className="pr-10 bg-gray-50" />
                                             {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-1">
-                                            <Label htmlFor="motDePasse">Mot de passe *</Label>
+                                            <Label htmlFor="motDePasse">Password *</Label>
                                             <div className="relative">
                                                 <Input id="motDePasse" type={showPassword ? "text" : "password"} value={formData.motDePasse} onChange={e => setFormData({ ...formData, motDePasse: e.target.value })} className="pr-10 bg-gray-50" placeholder="********" />
                                                 <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3" onClick={() => setShowPassword(!showPassword)}>
@@ -283,7 +283,7 @@ export default function Inscription() {
                                             {errors.motDePasse && <p className="text-xs text-red-500">{errors.motDePasse}</p>}
                                         </div>
                                         <div className="space-y-1">
-                                            <Label htmlFor="confirmMotDePasse">Confirmer le mot de passe *</Label>
+                                            <Label htmlFor="confirmMotDePasse">Confirm password *</Label>
                                             <div className="relative">
                                                 <Input id="confirmMotDePasse" type={showConfirmPassword ? "text" : "password"} value={formData.confirmMotDePasse} onChange={e => setFormData({ ...formData, confirmMotDePasse: e.target.value })} className="pr-10 bg-gray-50" placeholder="********" />
                                                 <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
@@ -294,9 +294,9 @@ export default function Inscription() {
                                         </div>
                                     </div>
 
-                                    {/* Document légal */}
+                                    {/* Legal document */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="legal_info">Document légal *</Label>
+                                        <Label htmlFor="legal_info">Legal document *</Label>
                                         <Label
                                             htmlFor="legal_info"
                                             className="cursor-pointer h-24 w-full border-2 border-dashed flex flex-col justify-center items-center rounded-md bg-gray-50"
@@ -304,12 +304,12 @@ export default function Inscription() {
                                             {formData.legal_info ? (
                                                 <>
                                                     <span className="font-medium">{formData.legal_info.name}</span>
-                                                    <span className="text-sm text-gray-500 mt-1">Cliquez pour changer</span>
+                                                    <span className="text-sm text-gray-500 mt-1">Click to change</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <span>.pdf, .jpg, .jpeg, .png</span>
-                                                    <span className="text-sm text-gray-500 mt-1">Cliquez pour sélectionner</span>
+                                                    <span className="text-sm text-gray-500 mt-1">Click to upload</span>
                                                 </>
                                             )}
                                         </Label>
@@ -320,29 +320,29 @@ export default function Inscription() {
                                     <div className="flex items-start space-x-2">
                                         <Checkbox checked={formData.accepteConditions} onCheckedChange={checked => setFormData({ ...formData, accepteConditions: !!checked })} id="conditions" />
                                         <Label htmlFor="conditions" className="text-sm leading-relaxed">
-                                            J'accepte les <Link href="/conditions" className="text-primary hover:underline">conditions d'utilisation</Link> et la <Link href="/confidentialite" className="text-primary hover:underline">politique de confidentialité</Link> *
+                                            I accept the <Link href="/conditions" className="text-primary hover:underline">terms of service</Link> and the <Link href="/confidentialite" className="text-primary hover:underline">privacy policy</Link> *
                                         </Label>
                                     </div>
                                     {errors.accepteConditions && <p className="text-xs text-red-500">{errors.accepteConditions}</p>}
 
                                     <div className="flex justify-end">
-                                        <Button type="submit">Suivant</Button>
+                                        <Button type="submit">Next</Button>
                                     </div>
                                 </form>
                             </CardContent>
                         </Card>
                     </TabsContent>
 
-                    {/* Step 2: Choix du plan */}
+                    {/* Step 2: Plan selection */}
                     <TabsContent value="plan">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Choisissez votre plan</CardTitle>
+                                <CardTitle>Choose your plan</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <Select value={formData.typeCompte} onValueChange={v => setFormData({ ...formData, typeCompte: v })}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Sélectionnez votre abonnement" />
+                                        <SelectValue placeholder="Select your subscription" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {plans.map(plan => (
@@ -350,10 +350,10 @@ export default function Inscription() {
                                                 <div className="flex justify-between w-full items-center">
                                                     <div className="flex flex-col">
                                                         <span className="font-medium">{plan.label}</span>
-                                                        {plan.label === "Premium" && <Badge variant="default" className="mt-1">Populaire</Badge>}
+                                                        {plan.label === "Premium" && <Badge variant="default" className="mt-1">Popular</Badge>}
                                                         <div className="text-sm text-muted-foreground">{plan.description}</div>
                                                     </div>
-                                                    <span className="font-bold">{plan.price === 0 ? "Gratuit" : `${plan.price.toLocaleString()} Ar/an`}</span>
+                                                    <span className="font-bold">{plan.price === 0 ? "Free" : `${plan.price.toLocaleString()} Ar/year`}</span>
                                                 </div>
                                             </SelectItem>
                                         ))}
@@ -363,7 +363,7 @@ export default function Inscription() {
                                 {isPaidPlan && clientSecret && (
                                     <Card>
                                         <CardHeader>
-                                            <CardTitle>Paiement sécurisé</CardTitle>
+                                            <CardTitle>Secure payment</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <Elements stripe={stripePromise} options={{ clientSecret }}>
@@ -376,16 +376,16 @@ export default function Inscription() {
                                 {selectedPlan && (
                                     <Card className="mt-4">
                                         <CardHeader>
-                                            <CardTitle>Récapitulatif</CardTitle>
+                                            <CardTitle>Summary</CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="flex justify-between">
-                                                <span>Plan sélectionné :</span>
+                                                <span>Selected plan:</span>
                                                 <Badge variant={selectedPlan.value === "premium" ? "default" : "secondary"}>{selectedPlan.label}</Badge>
                                             </div>
                                             <div className="flex justify-between">
-                                                <span>Prix :</span>
-                                                <span className="font-bold">{selectedPlan.price === 0 ? "Gratuit" : `${selectedPlan.price.toLocaleString()} Ar/an`}</span>
+                                                <span>Price:</span>
+                                                <span className="font-bold">{selectedPlan.price === 0 ? "Free" : `${selectedPlan.price.toLocaleString()} Ar/year`}</span>
                                             </div>
                                             <div className="text-sm text-muted-foreground">{selectedPlan.description}</div>
                                         </CardContent>
@@ -393,9 +393,9 @@ export default function Inscription() {
                                 )}
 
                                 <div className="flex justify-between mt-4">
-                                    <Button variant="outline" onClick={() => setCurrentStep("info")}>Retour</Button>
+                                    <Button variant="outline" onClick={() => setCurrentStep("info")}>Back</Button>
                                     <Button onClick={handleSubmit} disabled={isLoading}>
-                                        {isLoading ? "Création en cours..." : "Créer mon compte"}
+                                        {isLoading ? "Creating account..." : "Create my account"}
                                     </Button>
                                 </div>
                             </CardContent>

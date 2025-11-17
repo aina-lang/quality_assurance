@@ -31,24 +31,24 @@ export default function Layout({ children }: LayoutProps) {
     };
 
     const navigation = [
-        { name: 'Accueil', href: '/' },
-        { name: 'Offres', href: '/offres' },
-        { name: 'Téléchargement', href: '/download' },
-        { name: 'Inscription', href: '/subscription' },
-        { name: 'Démo', href: '/demo' },
+        { name: 'Home', href: '/' },
+        { name: 'Pricing', href: '/offres' },
+        { name: 'Download', href: '/download' },
+        { name: 'Sign up', href: '/subscription' },
+        { name: 'Demo', href: '/demo' },
         { name: 'Documentation', href: '/documentation' }
     ];
 
     const handleContactSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!contactForm.nom || !contactForm.email || !contactForm.message) {
-            toast.error('Veuillez remplir tous les champs');
+            toast.error('Please fill out every field.');
             return;
         }
 
         // Simulate API call
         setTimeout(() => {
-            toast.success('Message envoyé avec succès !');
+            toast.success('Message sent successfully!');
             setContactForm({ nom: '', email: '', message: '' });
         }, 1000);
     };
@@ -157,7 +157,7 @@ export default function Layout({ children }: LayoutProps) {
                                 <span className="font-bold text-xl">Quality Assurance</span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Logiciel de gestion de qualité pour entreprises. Compatible Windows, macOS et Linux.
+                                Quality management software for ambitious teams. Compatible with Windows, macOS, and Linux.
                             </p>
                             <div className="flex space-x-4">
                                 <button className="w-8 h-8">
@@ -174,7 +174,7 @@ export default function Layout({ children }: LayoutProps) {
 
                         {/* Quick Links */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold">Liens rapides</h3>
+                            <h3 className="font-semibold">Quick links</h3>
                             <ul className="space-y-2">
                                 {navigation.map((item) => (
                                     <li key={item.name}>
@@ -210,29 +210,29 @@ export default function Layout({ children }: LayoutProps) {
 
                         {/* Contact Form */}
                         <div className="space-y-4">
-                            <h3 className="font-semibold">Nous contacter</h3>
+                            <h3 className="font-semibold">Get in touch</h3>
                             <Card>
                                 <CardContent className="p-4">
                                     <form onSubmit={handleContactSubmit} className="space-y-3">
                                         <Input
-                                            placeholder="Votre nom"
-                                            //   value={contactForm.nom}
+                                            placeholder="Your name"
+                                            value={contactForm.nom}
                                             onChange={(e) => setContactForm({ ...contactForm, nom: e.target.value })}
                                         />
                                         <Input
                                             type="email"
-                                            placeholder="Votre email"
-
+                                            placeholder="Your email"
+                                            value={contactForm.email}
                                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                                         />
                                         <TextArea
-                                            placeholder="Votre message"
+                                            placeholder="Your message"
                                             rows={3}
                                             value={contactForm.message}
-                                        //   onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                                            onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                                         />
                                         <Button className="w-full">
-                                            Envoyer
+                                            Send
                                         </Button>
                                     </form>
                                 </CardContent>
@@ -243,7 +243,7 @@ export default function Layout({ children }: LayoutProps) {
                     {/* Bottom Footer */}
                     <div className="mt-8 pt-8 border-t text-center">
                         <p className="text-sm text-muted-foreground">
-                            © {new Date().getFullYear()} Quality Assurance Pro. Tous droits réservés.
+                            © {new Date().getFullYear()} Quality Assurance Pro. All rights reserved.
                         </p>
                     </div>
                 </div>

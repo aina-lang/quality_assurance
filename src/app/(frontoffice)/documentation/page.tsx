@@ -40,78 +40,78 @@ export default function Documentation() {
         windows: [
             {
                 step: 1,
-                title: 'Téléchargement',
-                content: 'Téléchargez le fichier d\'installation QAPro-Setup.exe depuis la page de téléchargement.',
+                title: 'Download',
+                content: 'Download the QAPro-Setup.exe installer from the download page.',
                 code: null
             },
             {
                 step: 2,
-                title: 'Exécution en tant qu\'administrateur',
-                content: 'Clic droit sur le fichier téléchargé et sélectionnez "Exécuter en tant qu\'administrateur".',
+                title: 'Run as administrator',
+                content: 'Right-click the downloaded file and choose "Run as administrator."',
                 code: null
             },
             {
                 step: 3,
-                title: 'Assistant d\'installation',
-                content: 'Suivez les étapes de l\'assistant d\'installation. Acceptez les termes et choisissez le répertoire d\'installation.',
+                title: 'Setup wizard',
+                content: 'Follow the installer wizard, accept the terms, and choose the install directory.',
                 code: null
             },
             {
                 step: 4,
-                title: 'Configuration initiale',
-                content: 'Au premier lancement, configurez votre compte et vos préférences.',
+                title: 'Initial configuration',
+                content: 'On first launch, configure your account and preferences.',
                 code: null
             }
         ],
         macos: [
             {
                 step: 1,
-                title: 'Téléchargement',
-                content: 'Téléchargez le fichier QAPro.dmg depuis la page de téléchargement.',
+                title: 'Download',
+                content: 'Download the QAPro.dmg file from the download page.',
                 code: null
             },
             {
                 step: 2,
-                title: 'Montage du disque',
-                content: 'Double-cliquez sur le fichier .dmg pour monter l\'image disque.',
+                title: 'Mount the disk image',
+                content: 'Double-click the .dmg file to mount the disk image.',
                 code: null
             },
             {
                 step: 3,
-                title: 'Installation',
-                content: 'Glissez l\'application Quality Assurance vers le dossier Applications.',
+                title: 'Install',
+                content: 'Drag the Quality Assurance app into the Applications folder.',
                 code: null
             },
             {
                 step: 4,
-                title: 'Autorisation de sécurité',
-                content: 'Si macOS bloque l\'application, allez dans Préférences Système > Sécurité et confidentialité pour l\'autoriser.',
+                title: 'Security approval',
+                content: 'If macOS blocks the app, open System Settings > Security & Privacy to allow it.',
                 code: null
             }
         ],
         linux: [
             {
                 step: 1,
-                title: 'Téléchargement',
-                content: 'Téléchargez le package approprié (.deb pour Ubuntu/Debian, .rpm pour Fedora/CentOS).',
+                title: 'Download',
+                content: 'Download the proper package (.deb for Ubuntu/Debian, .rpm for Fedora/CentOS).',
                 code: null
             },
             {
                 step: 2,
-                title: 'Installation via gestionnaire de paquets',
-                content: 'Pour Ubuntu/Debian :',
+                title: 'Install via package manager (Ubuntu/Debian)',
+                content: 'Run the following commands:',
                 code: 'sudo dpkg -i qapro_2.0.1_amd64.deb\nsudo apt-get install -f'
             },
             {
                 step: 3,
-                title: 'Installation Fedora/CentOS',
-                content: 'Pour Fedora/CentOS :',
+                title: 'Install on Fedora/CentOS',
+                content: 'Use the RPM installer:',
                 code: 'sudo rpm -i qapro-2.0.1.x86_64.rpm'
             },
             {
                 step: 4,
-                title: 'Lancement',
-                content: 'Lancez l\'application depuis le menu Applications ou via le terminal :',
+                title: 'Launch',
+                content: 'Start the application from the Applications menu or via terminal:',
                 code: 'qapro'
             }
         ]
@@ -120,103 +120,103 @@ export default function Documentation() {
     const userGuide = [
         {
             id: 'connexion',
-            title: 'Connexion et authentification',
+            title: 'Sign-in and authentication',
             content: [
                 {
-                    subtitle: 'Première connexion',
-                    text: 'Lors de votre première connexion, utilisez les identifiants fournis lors de l\'inscription. Vous serez invité à changer votre mot de passe.'
+                    subtitle: 'First login',
+                    text: 'Use the credentials provided at signup. You will be prompted to change your password on first login.'
                 },
                 {
-                    subtitle: 'Mot de passe oublié',
-                    text: 'Utilisez le lien "Mot de passe oublié" sur la page de connexion. Un email de réinitialisation vous sera envoyé.'
+                    subtitle: 'Forgot password',
+                    text: 'Click the “Forgot password” link on the login page to receive a reset email.'
                 },
                 {
-                    subtitle: 'Authentification à deux facteurs',
-                    text: 'Pour plus de sécurité, activez l\'authentification à deux facteurs dans les paramètres de votre compte.'
+                    subtitle: 'Two-factor authentication',
+                    text: 'Enable two-factor authentication in your account settings for additional security.'
                 }
             ]
         },
         {
             id: 'domaines',
-            title: 'Gestion des domaines',
+            title: 'Domain management',
             content: [
                 {
-                    subtitle: 'Création d\'un domaine',
-                    text: 'Cliquez sur "Nouveau domaine" dans le tableau de bord principal. Donnez un nom descriptif et définissez les permissions d\'accès.'
+                    subtitle: 'Create a domain',
+                    text: 'Click “New domain” on the main dashboard, provide a descriptive name, and set access permissions.'
                 },
                 {
-                    subtitle: 'Limitation par abonnement',
-                    text: 'Le nombre de domaines disponibles dépend de votre abonnement : Gratuit (10), Premium (15), Platinum (20), VIP (illimité).'
+                    subtitle: 'Plan limits',
+                    text: 'Available domains depend on your plan: Free (10), Premium (15), Platinum (20), VIP (unlimited).'
                 },
                 {
-                    subtitle: 'Attribution de responsables',
-                    text: 'Chaque domaine peut avoir un ou plusieurs responsables qui gèrent les accès et le contenu.'
+                    subtitle: 'Assign owners',
+                    text: 'Each domain can have one or more owners responsible for access and content.'
                 }
             ]
         },
         {
             id: 'templates',
-            title: 'Création et modification de templates',
+            title: 'Creating and editing templates',
             content: [
                 {
-                    subtitle: 'Éditeur visuel',
-                    text: 'L\'éditeur de templates utilise une interface drag & drop similaire à Canva. Glissez les éléments depuis la bibliothèque vers votre canvas.'
+                    subtitle: 'Visual editor',
+                    text: 'The drag-and-drop editor feels like Canva—drag components from the library onto your canvas.'
                 },
                 {
-                    subtitle: 'Bibliothèque de composants',
-                    text: 'Accédez à une vaste bibliothèque de composants prédéfinis : textes, images, graphiques, tableaux, etc.'
+                    subtitle: 'Component library',
+                    text: 'Use the extensive library of prebuilt elements: text, images, charts, tables, and more.'
                 },
                 {
-                    subtitle: 'Sauvegarde automatique',
-                    text: 'Vos modifications sont sauvegardées automatiquement toutes les 30 secondes. Vous pouvez aussi sauvegarder manuellement avec Ctrl+S.'
+                    subtitle: 'Auto-save',
+                    text: 'Changes auto-save every 30 seconds. You can also save manually with Ctrl+S / Cmd+S.'
                 },
                 {
                     subtitle: 'Versioning',
-                    text: 'Chaque modification crée une nouvelle version. Vous pouvez revenir à une version antérieure à tout moment.'
+                    text: 'Every change creates a new version so you can roll back at any time.'
                 }
             ]
         },
         {
             id: 'fichiers',
-            title: 'Ajout et gestion de fichiers',
+            title: 'File upload & management',
             content: [
                 {
-                    subtitle: 'Formats supportés',
-                    text: 'Quality Assurance supporte de nombreux formats : PDF, DOC/DOCX, images (JPG, PNG, SVG), vidéos (MP4, AVI), audio (MP3, WAV).'
+                    subtitle: 'Supported formats',
+                    text: 'Quality Assurance supports PDF, DOC/DOCX, images (JPG, PNG, SVG), video (MP4, AVI), and audio (MP3, WAV).'
                 },
                 {
-                    subtitle: 'Taille maximale',
-                    text: 'La taille maximale par fichier varie selon votre abonnement : Gratuit (10MB), Premium (50MB), Platinum (100MB), VIP (illimité).'
+                    subtitle: 'Maximum size',
+                    text: 'Per-file limits: Free (10MB), Premium (50MB), Platinum (100MB), VIP (unlimited).'
                 },
                 {
-                    subtitle: 'Organisation',
-                    text: 'Organisez vos fichiers en dossiers et sous-dossiers. Utilisez les tags pour faciliter la recherche.'
+                    subtitle: 'Organization',
+                    text: 'Organize files into folders/subfolders and tag them to simplify search.'
                 },
                 {
-                    subtitle: 'Partage',
-                    text: 'Partagez vos fichiers avec des permissions granulaires : lecture seule, modification, ou administration complète.'
+                    subtitle: 'Sharing',
+                    text: 'Share files with granular permissions: read-only, edit, or full admin rights.'
                 }
             ]
         },
         {
             id: 'roles',
-            title: 'Rôles et permissions',
+            title: 'Roles & permissions',
             content: [
                 {
-                    subtitle: 'Rôle Client',
-                    text: 'Les Clients ont accès complet à leur domaine : création, modification, suppression de contenu et gestion des utilisateurs.'
+                    subtitle: 'Client role',
+                    text: 'Clients have full access to their domain: create, edit, delete content, and manage users.'
                 },
                 {
-                    subtitle: 'Rôle Participant',
-                    text: 'Les Participants ont un accès en lecture seule ou limité selon les permissions accordées par le Client.'
+                    subtitle: 'Participant role',
+                    text: 'Participants get read-only or limited access based on the permissions granted by the Client.'
                 },
                 {
                     subtitle: 'Invitations',
-                    text: 'Invitez des utilisateurs par email en spécifiant leur rôle et leurs permissions spécifiques.'
+                    text: 'Invite users by email and define their role plus specific permissions.'
                 },
                 {
-                    subtitle: 'Gestion des accès',
-                    text: 'Modifiez les permissions à tout moment depuis le panneau de gestion des utilisateurs.'
+                    subtitle: 'Access management',
+                    text: 'Update permissions anytime from the user management panel.'
                 }
             ]
         }
@@ -225,67 +225,67 @@ export default function Documentation() {
     const licenseInfo = [
         {
             id: 'abonnements',
-            title: 'Types d\'abonnements',
+            title: 'Subscription types',
             content: [
                 {
-                    subtitle: 'Gratuit',
-                    text: 'Accès limité avec 10 domaines, 1 utilisateur, stockage 1GB. Idéal pour découvrir Quality Assurance.'
+                    subtitle: 'Free',
+                    text: 'Limited access with 10 domains, 1 user, 1GB storage. Perfect for discovering Quality Assurance.'
                 },
                 {
                     subtitle: 'Premium',
-                    text: '50,000 Ar/an - 15 domaines, 5 utilisateurs, stockage 10GB, support email prioritaire.'
+                    text: '50,000 Ar / year – 15 domains, 5 users, 10GB storage, priority email support.'
                 },
                 {
                     subtitle: 'Platinum',
-                    text: '100,000 Ar/an - 20 domaines, 15 utilisateurs, stockage 50GB, support téléphonique.'
+                    text: '100,000 Ar / year – 20 domains, 15 users, 50GB storage, phone support.'
                 },
                 {
                     subtitle: 'VIP',
-                    text: '200,000 Ar/an - Domaines illimités, utilisateurs illimités, stockage illimité, support 24/7.'
+                    text: '200,000 Ar / year – Unlimited domains, unlimited users, unlimited storage, 24/7 support.'
                 }
             ]
         },
         {
             id: 'paiements',
-            title: 'Gestion des paiements',
+            title: 'Payment management',
             content: [
                 {
-                    subtitle: 'Facturation annuelle',
-                    text: 'Tous les abonnements sont facturés annuellement. Le renouvellement est automatique sauf résiliation.'
+                    subtitle: 'Annual billing',
+                    text: 'All plans are billed annually with automatic renewal unless cancelled.'
                 },
                 {
-                    subtitle: 'Moyens de paiement',
-                    text: 'Nous acceptons PayPal, cartes bancaires, virements, Mobile Money, Orange Money, et MVola.'
+                    subtitle: 'Payment methods',
+                    text: 'We accept PayPal, credit cards, wire transfers, Mobile Money, Orange Money, and MVola.'
                 },
                 {
-                    subtitle: 'Compte à rebours',
-                    text: 'Votre tableau de bord affiche le temps restant avant le renouvellement de votre abonnement.'
+                    subtitle: 'Renewal countdown',
+                    text: 'Your dashboard displays the time remaining before renewal.'
                 },
                 {
-                    subtitle: 'Résiliation',
-                    text: 'Vous pouvez résilier votre abonnement à tout moment. L\'accès reste actif jusqu\'à la fin de la période payée.'
+                    subtitle: 'Cancellation',
+                    text: 'Cancel anytime; access remains active until the end of the paid period.'
                 }
             ]
         },
         {
             id: 'support',
-            title: 'Support et assistance',
+            title: 'Support & assistance',
             content: [
                 {
-                    subtitle: 'Niveaux de support',
-                    text: 'Le niveau de support varie selon votre abonnement : communauté (Gratuit), email (Premium), téléphone (Platinum), 24/7 (VIP).'
+                    subtitle: 'Support levels',
+                    text: 'Support tiers follow your plan: community (Free), email (Premium), phone (Platinum), 24/7 (VIP).'
                 },
                 {
                     subtitle: 'Documentation',
-                    text: 'Cette documentation complète est accessible à tous les utilisateurs, quel que soit leur abonnement.'
+                    text: 'This full documentation is available to every user regardless of plan.'
                 },
                 {
-                    subtitle: 'Formation',
-                    text: 'Les abonnements Platinum et VIP incluent des sessions de formation personnalisées.'
+                    subtitle: 'Training',
+                    text: 'Platinum and VIP plans include personalized training sessions.'
                 },
                 {
                     subtitle: 'SLA',
-                    text: 'Les abonnements VIP bénéficient d\'un SLA garanti avec temps de réponse maximum de 2 heures.'
+                    text: 'VIP subscriptions include an SLA with a guaranteed 2-hour maximum response time.'
                 }
             ]
         }
@@ -293,24 +293,24 @@ export default function Documentation() {
 
     const faq = [
         {
-            question: 'Comment migrer mes données depuis un autre système ?',
-            answer: 'Quality Assurance propose des outils d\'import pour les formats courants (CSV, Excel, PDF). Contactez notre support pour une migration assistée.'
+            question: 'How do I migrate data from another system?',
+            answer: 'Quality Assurance provides import tools for common formats (CSV, Excel, PDF). Contact support for assisted migration.'
         },
         {
-            question: 'Puis-je utiliser Quality Assurance hors ligne ?',
-            answer: 'Quality Assurance nécessite une connexion internet pour la synchronisation. Cependant, vous pouvez consulter vos documents récents en mode hors ligne.'
+            question: 'Can I use Quality Assurance offline?',
+            answer: 'An internet connection is required for sync, but you can view recently opened documents offline.'
         },
         {
-            question: 'Comment sauvegarder mes données ?',
-            answer: 'Vos données sont automatiquement sauvegardées dans le cloud. Vous pouvez aussi exporter vos domaines en local via les paramètres.'
+            question: 'How are my backups handled?',
+            answer: 'Your data is automatically backed up in the cloud, and you can export domains locally from settings.'
         },
         {
-            question: 'Quelle est la politique de confidentialité ?',
-            answer: 'Vos données sont chiffrées et stockées en Europe. Nous respectons le RGPD et ne partageons jamais vos informations avec des tiers.'
+            question: 'What is your privacy policy?',
+            answer: 'Data is encrypted, stored in the EU, GDPR-compliant, and never shared with third parties.'
         },
         {
-            question: 'Comment contacter le support technique ?',
-            answer: 'Utilisez le chat intégré, envoyez un email à support@qapro.com, ou appelez notre hotline selon votre niveau d\'abonnement.'
+            question: 'How can I contact technical support?',
+            answer: 'Use the in-app chat, email support@qapro.com, or call the hotline available with your plan.'
         }
     ];
 
@@ -329,11 +329,10 @@ export default function Documentation() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
                     <div className="text-center space-y-6">
                         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                            <span className="text-primary">Documentation</span> Quality Assurance
+                            <span className="text-primary">Quality Assurance</span> Documentation
                         </h1>
                         <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                            Guide complet d'installation, d'utilisation et de gestion de votre solution
-                            Quality Assurance Pro. Trouvez rapidement les réponses à vos questions.
+                            The complete guide for installing, using, and managing your Quality Assurance Pro workspace. Find answers in seconds.
                         </p>
 
                         {/* Search */}
@@ -341,7 +340,7 @@ export default function Documentation() {
                             <div className="relative">
                                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Rechercher dans la documentation..."
+                                    placeholder="Search the documentation..."
                                     className="pl-10"
 
                                     onChange={(e: { target: { value: SetStateAction<string>; }; }) => setSearchQuery(e.target.value)}
@@ -356,8 +355,8 @@ export default function Documentation() {
                 <Tabs defaultValue="installation" className="space-y-8">
                     <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
                         <TabsTrigger value="installation">Installation</TabsTrigger>
-                        <TabsTrigger value="guide">Guide d'utilisation</TabsTrigger>
-                        <TabsTrigger value="licence">Licence & Paiements</TabsTrigger>
+                        <TabsTrigger value="guide">User guide</TabsTrigger>
+                        <TabsTrigger value="licence">License & Billing</TabsTrigger>
                         <TabsTrigger value="faq">FAQ</TabsTrigger>
                     </TabsList>
 
@@ -367,10 +366,10 @@ export default function Documentation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
                                     <Download className="h-5 w-5" />
-                                    <span>Installation de Quality Assurance</span>
+                                    <span>Installing Quality Assurance</span>
                                 </CardTitle>
                                 <CardDescription>
-                                    Instructions détaillées pour installer Quality Assurance sur Windows, macOS et Linux
+                                    Step-by-step instructions for Windows, macOS, and Linux
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -440,10 +439,10 @@ export default function Documentation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
                                     <Book className="h-5 w-5" />
-                                    <span>Guide d'utilisation</span>
+                                    <span>User guide</span>
                                 </CardTitle>
                                 <CardDescription>
-                                    Apprenez à utiliser toutes les fonctionnalités de Quality Assurance
+                                    Learn how to use every feature inside Quality Assurance
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -488,10 +487,10 @@ export default function Documentation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
                                     <CreditCard className="h-5 w-5" />
-                                    <span>Licence et Paiements</span>
+                                    <span>License & billing</span>
                                 </CardTitle>
                                 <CardDescription>
-                                    Informations sur les abonnements, paiements et support
+                                    Plan details, payment options, and support coverage
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -534,10 +533,10 @@ export default function Documentation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center space-x-2">
                                     <HelpCircle className="h-5 w-5" />
-                                    <span>Questions fréquentes</span>
+                                    <span>Frequently asked questions</span>
                                 </CardTitle>
                                 <CardDescription>
-                                    Réponses aux questions les plus courantes sur Quality Assurance
+                                    Answers to the questions we hear most often
                                 </CardDescription>
                             </CardHeader>
                         </Card>
@@ -568,19 +567,18 @@ export default function Documentation() {
                             <HelpCircle className="h-8 w-8 text-primary" />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-bold mb-2">Besoin d'aide supplémentaire ?</h3>
+                            <h3 className="text-2xl font-bold mb-2">Need extra help?</h3>
                             <p className="text-muted-foreground max-w-2xl mx-auto">
-                                Notre équipe support est là pour vous accompagner. Contactez-nous pour
-                                une assistance personnalisée ou une formation sur mesure.
+                                Our support team is here for you. Reach out for personalized assistance or tailored training sessions.
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Button >
-                                Contacter le support
+                                Contact support
                             </Button>
                             <Button variant="outline">
                                 <ExternalLink className="mr-2 h-4 w-4" />
-                                Centre d'aide en ligne
+                                Help center
                             </Button>
                         </div>
                     </CardContent>

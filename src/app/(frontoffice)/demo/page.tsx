@@ -29,105 +29,105 @@ export default function Demo() {
   const features = [
     {
       id: 'master-menu',
-      title: 'Master Menu - Gestion Corporate',
-      description: 'Interface principale pour la gestion des formations et manuels d\'entreprise',
+      title: 'Master Menu – Corporate Management',
+      description: 'Primary interface for managing corporate training programs and manuals',
       screenshot: '/api/placeholder/800/500',
       highlights: [
-        'Corp Mgmt Training - Gestion des formations corporate',
-        'OSM (Operational Standards Manual) - Manuels standards',
-        'Navigation intuitive par domaines',
-        'Tableau de bord exécutif'
+        'Corp Mgmt Training – corporate training management',
+        'OSM (Operational Standards Manual) – standard manuals',
+        'Intuitive navigation by domain',
+        'Executive dashboard view'
       ]
     },
     {
       id: 'domain-creation',
-      title: 'Création et Gestion de Domaines',
-      description: 'Organisez votre travail par domaines métier selon votre abonnement',
+      title: 'Domain Creation & Management',
+      description: 'Organize your work by business domain based on your subscription',
       screenshot: '/api/placeholder/800/500',
       highlights: [
-        'Création rapide de nouveaux domaines',
-        'Limitation selon l\'abonnement (10-20+ domaines)',
-        'Attribution de responsables par domaine',
-        'Paramètres de confidentialité avancés'
+        'Create new domains in seconds',
+        'Limits that match your plan (10-20+ domains)',
+        'Assign owners to each domain',
+        'Advanced privacy and sharing settings'
       ]
     },
     {
       id: 'template-editor',
-      title: 'Éditeur de Templates (Style Canva)',
-      description: 'Créez et modifiez vos templates avec une interface moderne et intuitive',
+      title: 'Template Editor (Canva-style)',
+      description: 'Design templates with a modern, intuitive editor',
       screenshot: '/api/placeholder/800/500',
       highlights: [
-        'Interface drag & drop similaire à Canva',
-        'Bibliothèque de composants prédéfinis',
-        'Personnalisation complète des designs',
-        'Prévisualisation en temps réel'
+        'Canva-like drag & drop interface',
+        'Library of ready-to-use components',
+        'Full design customization',
+        'Live preview while editing'
       ]
     },
     {
       id: 'file-management',
-      title: 'Gestion de Fichiers et Médias',
-      description: 'Ajoutez et organisez tous vos fichiers de formation et documentation',
+      title: 'File & Media Management',
+      description: 'Add and organize all training and documentation assets',
       screenshot: '/api/placeholder/800/500',
       highlights: [
-        'Support multi-formats (PDF, images, vidéos)',
-        'Stockage cloud sécurisé',
-        'Versioning automatique',
-        'Partage contrôlé avec permissions'
+        'Multi-format support (PDF, images, video)',
+        'Secure cloud storage',
+        'Automatic versioning',
+        'Permission-based sharing'
       ]
     },
     {
       id: 'collaboration',
-      title: 'Collaboration et Rôles',
-      description: 'Gérez les accès et collaborez efficacement avec votre équipe',
+      title: 'Collaboration & Roles',
+      description: 'Control access and collaborate seamlessly with your team',
       screenshot: '/api/placeholder/800/500',
       highlights: [
-        'Rôles Client et Participant',
-        'Invitations par email',
-        'Permissions granulaires',
-        'Suivi des activités en temps réel'
+        'Client and Participant roles',
+        'Email invitations',
+        'Granular permissions',
+        'Real-time activity tracking'
       ]
     }
   ];
 
   const videoDemo = {
-    title: 'Démonstration complète de Quality Assurance',
+    title: 'Quality Assurance full walkthrough',
     duration: '8:32',
     thumbnail: '/api/placeholder/800/450',
-    description: 'Découvrez toutes les fonctionnalités de Quality Assurance en action avec cette démonstration complète.'
+    description: 'See every feature of Quality Assurance in action with this guided walkthrough.'
   };
 
   const useCases = [
     {
-      title: 'Formation Corporate',
-      description: 'Créez des programmes de formation standardisés pour vos équipes',
+      title: 'Corporate Training',
+      description: 'Create standardized training programs for every team',
       icon: <Users className="h-6 w-6" />,
       benefits: [
-        'Templates de formation prêts à l\'emploi',
-        'Suivi des progrès individuels',
-        'Certification automatique',
-        'Rapports de performance'
+        'Ready-to-use training templates',
+        'Individual progress tracking',
+        'Automatic certification',
+        'Performance reporting'
       ]
     },
     {
-      title: 'Manuels Opérationnels',
-      description: 'Développez et maintenez vos manuels de procédures',
+      title: 'Operational Manuals',
+      description: 'Develop and maintain every procedure manual',
       icon: <FileText className="h-6 w-6" />,
       benefits: [
-        'Versioning automatique des documents',
-        'Validation par les experts métier',
-        'Distribution contrôlée',
-        'Mise à jour en temps réel'
+        'Automatic document versioning',
+        'Business expert validation',
+        'Controlled distribution',
+        'Real-time updates'
       ]
     },
     {
-      title: 'Gestion Qualité',
-      description: 'Optimisez vos processus qualité avec des outils dédiés',
+      title: 'Quality Management',
+      description: 'Optimize QA processes with dedicated tooling',
       icon: <BarChart3 className="h-6 w-6" />,
       benefits: [
-        'Tableaux de bord qualité',
-        'Indicateurs de performance',
-        'Audits automatisés',
-        'Plans d\'amélioration continue'
+        'Quality dashboards',
+        'Key performance indicators',
+        'Automated audits',
+        'Continuous improvement plans'
       ]
     }
   ];
@@ -143,14 +143,13 @@ export default function Demo() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center space-y-6">
             <Badge variant="secondary" className="mb-4">
-              Démonstration interactive
+              Interactive demo
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Découvrez <span className="text-primary">Quality Assurance</span> en action
+              Experience <span className="text-primary">Quality Assurance</span> in action
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Explorez toutes les fonctionnalités de notre solution de gestion qualité 
-              à travers des démonstrations interactives et des captures d'écran détaillées.
+              Explore every capability of our quality platform through interactive demos and detailed screenshots.
             </p>
           </div>
         </div>
@@ -217,9 +216,9 @@ export default function Demo() {
       {/* Interactive Features Demo */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-12">
-          <h2 className="text-3xl font-bold">Fonctionnalités en détail</h2>
+          <h2 className="text-3xl font-bold">Features in detail</h2>
           <p className="text-lg text-muted-foreground">
-            Explorez chaque aspect de Quality Assurance avec nos captures d'écran interactives
+            Dive into each area of Quality Assurance with interactive screenshots.
           </p>
         </div>
 
@@ -246,7 +245,7 @@ export default function Demo() {
                   </div>
                   
                   <div className="space-y-3">
-                    <h4 className="font-semibold">Points clés :</h4>
+                    <h4 className="font-semibold">Key takeaways:</h4>
                     <ul className="space-y-2">
                       {feature.highlights.map((highlight, index) => (
                         <li key={index} className="flex items-start space-x-2">
@@ -261,12 +260,12 @@ export default function Demo() {
                     <Button asChild>
                       <Link href="subscription">
                         <MousePointer className="mr-2 h-4 w-4" />
-                        Essayer maintenant
+                        Try it now
                       </Link>
                     </Button>
                     <Button variant="outline">
                       <Eye className="mr-2 h-4 w-4" />
-                      Vue détaillée
+                      Detailed view
                     </Button>
                   </div>
                 </div>
@@ -280,7 +279,7 @@ export default function Demo() {
                             <Layers className="h-8 w-8 text-primary" />
                           </div>
                           <div>
-                            <h4 className="font-semibold">Capture d'écran interactive</h4>
+                            <h4 className="font-semibold">Interactive screenshot</h4>
                             <p className="text-sm text-muted-foreground">
                               {feature.title}
                             </p>
@@ -292,9 +291,9 @@ export default function Demo() {
                   
                   {/* Feature badges */}
                   <div className="absolute top-4 right-4 space-y-2">
-                    <Badge className="bg-primary/90">Nouveau</Badge>
+                    <Badge className="bg-primary/90">New</Badge>
                     {feature.id === 'template-editor' && (
-                      <Badge variant="secondary">Style Canva</Badge>
+                      <Badge variant="secondary">Canva-style</Badge>
                     )}
                   </div>
                 </div>
@@ -308,9 +307,9 @@ export default function Demo() {
       <section className="bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl font-bold">Cas d'usage concrets</h2>
+            <h2 className="text-3xl font-bold">Real-world use cases</h2>
             <p className="text-lg text-muted-foreground">
-              Découvrez comment Quality Assurance s'adapte à vos besoins métier
+              See how Quality Assurance adapts to every business workflow.
             </p>
           </div>
           
@@ -343,9 +342,9 @@ export default function Demo() {
       {/* Interface Highlights */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-12">
-          <h2 className="text-3xl font-bold">Interface moderne et intuitive</h2>
+          <h2 className="text-3xl font-bold">Modern, intuitive interface</h2>
           <p className="text-lg text-muted-foreground">
-            Une expérience utilisateur pensée pour la productivité
+            A user experience engineered for productivity.
           </p>
         </div>
         
@@ -355,9 +354,9 @@ export default function Demo() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Palette className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Design moderne</h3>
+              <h3 className="font-semibold mb-2">Modern design</h3>
               <p className="text-sm text-muted-foreground">
-                Interface épurée et professionnelle
+                Clean, professional interface
               </p>
             </CardContent>
           </Card>
@@ -367,9 +366,9 @@ export default function Demo() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <MousePointer className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Drag & Drop</h3>
+              <h3 className="font-semibold mb-2">Drag & drop</h3>
               <p className="text-sm text-muted-foreground">
-                Manipulation intuitive des éléments
+                Intuitive element handling
               </p>
             </CardContent>
           </Card>
@@ -381,7 +380,7 @@ export default function Demo() {
               </div>
               <h3 className="font-semibold mb-2">Collaboration</h3>
               <p className="text-sm text-muted-foreground">
-                Travail en équipe en temps réel
+                Real-time teamwork
               </p>
             </CardContent>
           </Card>
@@ -391,9 +390,9 @@ export default function Demo() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Settings className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="font-semibold mb-2">Personnalisation</h3>
+              <h3 className="font-semibold mb-2">Customization</h3>
               <p className="text-sm text-muted-foreground">
-                Adaptable à vos processus
+                Adaptable to your processes
               </p>
             </CardContent>
           </Card>
@@ -405,23 +404,22 @@ export default function Demo() {
         <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
           <CardContent className="p-12 text-center space-y-6">
             <h2 className="text-3xl font-bold">
-              Convaincu par la démonstration ?
+              Impressed by the demo?
             </h2>
             <p className="text-xl opacity-90 max-w-2xl mx-auto">
-              Commencez dès maintenant avec notre version gratuite ou planifiez 
-              une démonstration personnalisée avec notre équipe.
+              Start with the free version or schedule a personalized walkthrough with our team.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" variant="secondary" className="text-lg px-8 py-6">
                 <Link href="subscription">
                   <Download className="mr-2 h-5 w-5" />
-                  Commencer gratuitement
+                  Get started for free
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="text-lg px-8 py-6 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                 <Link href="/contact">
                   <Users className="mr-2 h-5 w-5" />
-                  Démo personnalisée
+                  Personalized demo
                 </Link>
               </Button>
             </div>
